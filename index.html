@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A&I-Logbuch</title>
+    <meta name="description" content="Ein Logbuch zur Erfassung von Prozeduren für die Facharztweiterbildung Anästhesie & Intensivmedizin.">
+    <meta name="theme-color" content="#ffffff"/>
+    <link rel="manifest" href="data:application/manifest+json,{
+        &quot;name&quot;: &quot;A&I-Logbuch&quot;,
+        &quot;short_name&quot;: &quot;A&I-Logbuch&quot;,
+        &quot;start_url&quot;: &quot;.&quot;,
+        &quot;display&quot;: &quot;standalone&quot;,
+        &quot;background_color&quot;: &quot;#f9fafb&quot;,
+        &quot;theme_color&quot;: &quot;#4f46e5&quot;,
+        &quot;description&quot;: &quot;Logbuch für die Facharztweiterbildung.&quot;,
+        &quot;icons&quot;: [
+            { &quot;src&quot;: &quot;data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192' fill='%234f46e5'%3e%3cpath d='M96 16a80 80 0 110 160A80 80 0 0196 16zm0 24a56 56 0 100 112 56 56 0 000-112z'/%3e%3c/svg%3e&quot;, &quot;sizes&quot;: &quot;192x192&quot;, &quot;type&quot;: &quot;image/svg+xml&quot; },
+            { &quot;src&quot;: &quot;data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%234f46e5'%3e%3cpath d='M256 48a208 208 0 110 416 208 208 0 010-416zm0 48a160 160 0 100 320 160 160 0 000-320z'/%3e%3c/svg%3e&quot;, &quot;sizes&quot;: &quot;512x512&quot;, &quot;type&quot;: &quot;image/svg+xml&quot; }
+        ]
+    }">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .progress-bar-bg { background-color: #e0e0e0; }
+        .progress-bar-fill { background-color: #4ade80; transition: width 0.5s ease-in-out; }
+        .card { background-color: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+        #patient-modal, #user-info-modal, #offset-edit-modal, #custom-message-modal, #edit-case-modal, #regional-anaesthesia-modal { transition: opacity 0.3s ease; }
+        .modal-content { transition: transform 0.3s ease; }
+        .category-tag-remove-btn { margin-left: 0.5rem; background: none; border: none; cursor: pointer; font-weight: bold; opacity: 0.7; }
+        .category-tag-remove-btn:hover { opacity: 1; }
+        .custom-select {
+            -webkit-appearance: none; -moz-appearance: none; appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem;
+        }
+        .custom-select optgroup { font-weight: bold; font-style: normal; color: #1f2937; }
+        .custom-select option { font-weight: normal; color: #374151; }
+        .edit-offset-btn { 
+            cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+            width: 2.5rem; height: 2.5rem; border-radius: 9999px; background-color: #f3f4f6;
+            color: #4b5563; transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
+        .edit-offset-btn:hover { background-color: #e5e7eb; color: #1f2937; }
+        .edit-offset-btn svg { width: 1.25em; height: 1.25em; }
+        #loading-overlay, #auth-container { z-index: 9999; }
+        input[type="date"]::placeholder { color: #9ca3af; }
+        .case-type-btn.active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .case-type-btn.active:hover {
+            background-color: #1d4ed8;
+        }
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+        .collapsible-header.open svg, .collapsible-header-sub.open svg {
+            transform: rotate(180deg);
+        }
+        .collapsible-header svg, .collapsible-header-sub svg {
+            transition: transform 0.3s ease;
+        }
+        .icon-btn {
+            background: none; border: none; padding: 0.25rem; cursor: pointer; color: #6b7280;
+        }
+        .icon-btn:hover { color: #1f2937; }
+        .icon-btn svg { width: 1.25rem; height: 1.25rem; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Lade-Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center">
+        <div class="text-center">
+            <svg class="animate-spin h-8 w-8 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <p class="mt-2 text-lg font-semibold text-gray-700">Wird geladen...</p>
+        </div>
+    </div>
+    
+    <!-- Authentifizierungs-UI -->
+    <div id="auth-container" class="hidden min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-md w-full">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900">A&I-Logbuch</h1>
+                <p class="text-md text-gray-600 mt-2">Bitte anmelden oder registrieren</p>
+            </div>
+            <div class="card p-8 space-y-6">
+                <div id="auth-forms">
+                    <form id="login-form" class="space-y-4">
+                        <h3 class="font-bold text-xl">Anmelden</h3>
+                        <div><input type="email" id="login-email" placeholder="E-Mail" class="p-2 border rounded-md w-full" required></div>
+                        <div><input type="password" id="login-password" placeholder="Passwort" class="p-2 border rounded-md w-full" required></div>
+                        <button type="submit" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600">Anmelden</button>
+                    </form>
+                    <form id="register-form" class="hidden space-y-4">
+                        <h3 class="font-bold text-xl">Registrieren</h3>
+                        <div><input type="email" id="register-email" placeholder="E-Mail" class="p-2 border rounded-md w-full" required></div>
+                        <div><input type="password" id="register-password" placeholder="Passwort (mind. 6 Zeichen)" class="p-2 border rounded-md w-full" required></div>
+                        <button type="submit" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">Registrieren</button>
+                    </form>
+                </div>
+                <div id="auth-error" class="text-red-600 text-sm text-center h-4"></div>
+                <div class="text-center text-sm">
+                    <button id="toggle-auth-mode" class="text-blue-600 hover:underline">Noch kein Account? Hier registrieren.</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Haupt-Anwendungs-UI -->
+    <div id="app-container" class="hidden container mx-auto p-4 md:p-8 max-w-5xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">A&I-Logbuch</h1>
+            <p class="text-md text-gray-600 mt-2">Facharzt Anästhesiologie (WBO 2021 Ärztekammer des Saarlandes)</p>
+        </header>
+        
+        <div class="card p-4 md:p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-700 mb-2">Account</h2>
+            <div class="text-sm space-y-2">
+                <p>Angemeldet als: <strong id="user-email-display" class="font-mono"></strong></p>
+                <p>Letzte Aktualisierung: <strong id="last-updated-display" class="font-mono">Wird geladen...</strong></p>
+                <button id="logout-btn" class="px-4 py-2 bg-gray-600 text-white font-semibold rounded-md hover:bg-gray-700 text-xs">Abmelden</button>
+            </div>
+        </div>
+
+        <div class="card p-4 md:p-6 mb-8">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-700">Benutzerdaten</h2>
+                <button id="edit-user-info-btn" class="px-4 py-2 bg-gray-200 text-sm font-semibold rounded-md hover:bg-gray-300">Bearbeiten</button>
+            </div>
+            <div id="user-info-display" class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-gray-800">
+                <div><strong class="block text-gray-500">Arzt/Ärztin:</strong><span id="display-doctorName"></span></div>
+                <div><strong class="block text-gray-500">Geburtsdatum:</strong><span id="display-doctorDob"></span></div>
+                <div><strong class="block text-gray-500">Klinikum:</strong><span id="display-clinic"></span></div>
+                <div><strong class="block text-gray-500">Weiterbildungsbevollmächtigte(r):</strong><span id="display-supervisor"></span></div>
+            </div>
+        </div>
+
+        <!-- Aufklappbarer Abschnitt für die Weiterbildungshistorie -->
+        <div class="card p-4 md:p-6 mb-8">
+            <div id="training-history-header" class="collapsible-header flex justify-between items-center cursor-pointer">
+                <h2 class="text-2xl font-bold text-gray-700">Weiterbildungshistorie</h2>
+                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+            <div id="training-history-content" class="collapsible-content mt-4">
+                <p class="text-sm text-gray-600 mb-4">Voraussetzungen laut WBO Ärztekammer des Saarlandes für den Facharzt Anästhesie: 60 Monate, davon 12 Monate Intensivmedizin, 12 Monate fachfremd möglich.</p>
+                <div class="space-y-6">
+                    <div>
+                        <label for="training-start-date" class="text-sm font-medium text-gray-700">Beginn der Weiterbildung (Gesamt)</label>
+                        <input type="date" id="training-start-date" class="mt-1 p-2 border rounded-md w-full md:w-1/2">
+                    </div>
+                    <div class="border-t pt-4">
+                        <h3 class="font-semibold text-lg text-gray-800 mb-2">Weiterbildungsabschnitte (A&I)</h3>
+                        <div id="training-periods-container" class="space-y-4"></div>
+                        <button type="button" id="add-training-period-btn" class="mt-4 px-4 py-2 bg-blue-100 text-blue-800 text-sm font-semibold rounded-md hover:bg-blue-200">+ Abschnitt hinzufügen</button>
+                    </div>
+                    <div class="border-t pt-4">
+                        <h3 class="font-semibold text-lg text-gray-800 mb-2">Weiterbildung außerhalb der Anästhesie</h3>
+                        <div id="external-periods-container" class="space-y-4"></div>
+                        <button type="button" id="add-external-period-btn" class="mt-4 px-4 py-2 bg-blue-100 text-blue-800 text-sm font-semibold rounded-md hover:bg-blue-200">+ Externen Abschnitt hinzufügen</button>
+                    </div>
+                    <div class="border-t pt-4 mt-4">
+                        <h3 class="font-semibold text-lg text-gray-800">Prognose</h3>
+                        <div class="w-full progress-bar-bg rounded-full h-4 my-2">
+                            <div id="prognosis-progress-bar" class="progress-bar-fill h-4 rounded-full" style="width: 0%;"></div>
+                        </div>
+                        <p>Bisher absolvierte Monate (effektiv): <strong id="completed-months-display" class="font-mono">0 / 60</strong></p>
+                        <p>Voraussichtliches Ende der Weiterbildung: <strong id="prognosis-end-date-display" class="font-mono">--</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card p-4 md:p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4 text-gray-700">Neuen Fall erfassen</h2>
+            <form id="add-patient-form" class="space-y-4">
+                <div id="form-errors" class="text-red-600 text-sm mb-4 hidden"></div>
+                <div>
+                    <label for="caseId" class="text-sm font-medium text-gray-700">Fall-ID (z.B. aus SAP)</label>
+                    <input type="text" id="caseId" inputmode="numeric" class="mt-1 p-2 border rounded-md w-full" required>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700 block mb-2">Art des Falls</label>
+                    <div class="flex gap-2">
+                        <button type="button" id="case-type-anesthesia" class="case-type-btn flex-1 py-2 px-4 border border-gray-300 rounded-md font-semibold text-gray-700 hover:bg-gray-100">Narkose</button>
+                        <button type="button" id="case-type-intensive" class="case-type-btn flex-1 py-2 px-4 border border-gray-300 rounded-md font-semibold text-gray-700 hover:bg-gray-100">Intensivbehandlung</button>
+                    </div>
+                </div>
+                <div id="shared-fields" class="space-y-4 hidden">
+                    <div><label for="diagnosis" class="text-sm font-medium text-gray-700">Diagnose</label><input type="text" id="diagnosis" class="mt-1 p-2 border rounded-md w-full"></div>
+                </div>
+                <div id="anesthesia-fields" class="space-y-4 hidden">
+                    <div><label for="dateOfAnesthesia" class="text-sm font-medium text-gray-700">Datum der Narkose</label><input type="date" id="dateOfAnesthesia" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                    <div><label for="dob" class="text-sm font-medium text-gray-700">Geburtsdatum Patient/in (optional)</label><input type="date" id="dob" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                    <div><label for="operation" class="text-sm font-medium text-gray-700">Operation</label><input type="text" id="operation" class="mt-1 p-2 border rounded-md w-full"></div>
+                </div>
+                <div id="intensive-fields" class="space-y-4 hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label for="treatmentStartDate" class="text-sm font-medium text-gray-700">Behandlungsbeginn</label><input type="date" id="treatmentStartDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                        <div><label for="treatmentEndDate" class="text-sm font-medium text-gray-700">Behandlungsende</label><input type="date" id="treatmentEndDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                    </div>
+                </div>
+                <div id="common-fields-after" class="space-y-4 hidden">
+                    <div id="category-selection-anesthesia" class="hidden">
+                        <label class="font-semibold block mb-2">Facharzt-Kategorie(n) Anästhesie:</label>
+                        <select id="category-select-anesthesia" class="w-full p-2 border rounded-md bg-white custom-select"><option value="">Kategorie auswählen...</option></select>
+                        <div id="category-tags-anesthesia" class="mt-3 flex flex-wrap gap-2"></div>
+                    </div>
+                    <div id="category-selection-intensive" class="hidden">
+                        <label class="font-semibold block mb-2">Facharzt-Kategorie(n) Intensiv- und Notfallmedizin:</label>
+                        <select id="category-select-intensive" class="w-full p-2 border rounded-md bg-white custom-select"><option value="">Kategorie auswählen...</option></select>
+                        <div id="category-tags-intensive" class="mt-3 flex flex-wrap gap-2"></div>
+                    </div>
+                    <div><label for="comments" class="text-sm font-medium text-gray-700">Kommentare (optional)</label><textarea id="comments" class="mt-1 p-2 border rounded-md w-full" rows="3"></textarea></div>
+                    <div><button type="submit" class="w-full bg-blue-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors">Fall speichern</button></div>
+                </div>
+            </form>
+        </div>
+
+        <div id="overall-progress-card" class="card p-4 md:p-6 mb-8 hidden">
+            <h2 class="text-2xl font-bold mb-4 text-gray-700">Gesamtfortschritt A&I-Logbuch</h2>
+            <div class="w-full h-6 progress-bar-bg rounded-full overflow-hidden mb-2">
+                <div id="overall-progress-fill" class="h-full progress-bar-fill rounded-full" style="width: 0%;"></div>
+            </div>
+            <p id="overall-progress-text" class="text-right text-base font-medium text-gray-700">0%</p>
+        </div>
+
+        <div id="wbo-procedure-list" class="space-y-6 mb-8"></div>
+        <div id="other-procedure-tiles" class="card p-4 md:p-6 mb-8 hidden">
+            <h2 class="text-2xl font-bold mb-4 text-gray-700">Intensivmedizinische Fälle</h2>
+            <div id="other-tiles-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+        </div>
+
+        <footer class="text-center mt-12 text-sm text-gray-500">
+             <div class="card p-4 md:p-6 mb-8">
+                <h3 class="text-xl font-bold text-gray-700 mb-4">Datenverwaltung</h3>
+                <div class="flex flex-col md:flex-row justify-center items-center gap-4">
+                    <button id="export-logbook-btn" class="w-full md:w-auto bg-teal-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-600">Logbuch exportieren (CSV)</button>
+                    <button id="export-data-btn" class="w-full md:w-auto bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">Backup exportieren</button>
+                    <button id="import-data-btn" class="w-full md:w-auto bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600">Backup importieren</button>
+                    <input type="file" id="import-file-input" class="hidden" accept=".json">
+                </div>
+                <p class="mt-4 text-xs text-gray-500">Exportieren Sie Ihr Logbuch als CSV-Datei zum Ausdrucken oder erstellen Sie ein JSON-Backup Ihrer App-Daten.</p>
+             </div>
+            <p>Alle Daten werden online in einer geschützten Datenbank gespeichert. Basiert auf der WBO vom 07.10.2020 (in Kraft 21.12.2021).</p>
+            <button id="reset-button" class="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">Alle Fälle & Korrekturen zurücksetzen</button>
+        </footer>
+    </div>
+
+    <!-- Modals -->
+    <div id="user-info-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="modal-content bg-white rounded-lg shadow-xl max-w-lg w-full transform scale-95">
+            <div class="p-4 border-b flex justify-between items-center"><h3 class="text-xl font-bold">Benutzerdaten bearbeiten</h3><button id="user-info-modal-close-btn" class="text-2xl font-bold">&times;</button></div>
+            <div class="p-6"><form id="user-info-form" class="space-y-4"><input type="text" id="doctorName" placeholder="Name des Arztes/der Ärztin" class="w-full p-2 border rounded-md" required><input type="date" id="doctorDob" class="w-full p-2 border rounded-md text-gray-500" required><input type="text" id="clinic" placeholder="Klinikum" class="w-full p-2 border rounded-md" required><input type="text" id="supervisor" placeholder="Weiterbildungsbevollmächtigte(r)" class="w-full p-2 border rounded-md"><button type="submit" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">Speichern</button></form></div>
+        </div>
+    </div>
+    <div id="patient-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="modal-content bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] flex flex-col transform scale-95">
+            <div class="p-4 border-b flex justify-between items-center"><h3 id="modal-title" class="text-xl font-bold">Patientendetails</h3><button id="patient-modal-close-btn" class="text-2xl font-bold">&times;</button></div>
+            <div id="modal-body" class="p-4 overflow-y-auto"></div>
+        </div>
+    </div>
+    <div id="offset-edit-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="modal-content bg-white rounded-lg shadow-xl max-w-sm w-full transform scale-95">
+            <div class="p-4 border-b flex justify-between items-center"><h3 id="offset-modal-title" class="text-xl font-bold">Fallzahl bearbeiten</h3><button id="offset-modal-close-btn" class="text-2xl font-bold">&times;</button></div>
+            <div class="p-6"><p id="offset-category-name" class="mb-4 text-gray-700"></p><form id="offset-edit-form" class="space-y-4"><div><label for="offset-input" class="text-sm font-medium text-gray-700">Manueller Wert:</label><input type="number" id="offset-input" class="mt-1 p-2 border rounded-md w-full" value="0" step="1"></div><div id="offset-error-message" class="text-red-600 text-sm hidden"></div><button type="submit" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600">Speichern</button></form></div>
+        </div>
+    </div>
+    <div id="custom-message-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="modal-content bg-white rounded-lg shadow-xl max-w-sm w-full transform scale-95">
+            <div class="p-4 border-b flex justify-between items-center"><h3 id="custom-message-title" class="text-xl font-bold">Nachricht</h3><button id="custom-message-close-btn" class="text-2xl font-bold">&times;</button></div>
+            <div class="p-6"><p id="custom-message-text" class="mb-4 text-gray-700"></p><div id="custom-message-buttons" class="flex justify-end space-x-2"><button id="custom-message-ok-btn" class="px-4 py-2 bg-blue-500 text-white font-bold rounded-md hover:bg-blue-600">OK</button><button id="custom-message-cancel-btn" class="px-4 py-2 bg-gray-300 text-gray-800 font-bold rounded-md hover:bg-gray-400 hidden">Abbrechen</button></div></div>
+        </div>
+    </div>
+    
+    <!-- Fall bearbeiten Modal -->
+    <div id="edit-case-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0 z-50">
+        <div class="modal-content bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col transform scale-95">
+             <div class="p-4 border-b flex justify-between items-center"><h3 class="text-xl font-bold">Fall bearbeiten</h3><button id="edit-case-modal-close-btn" class="text-2xl font-bold">&times;</button></div>
+             <div class="p-6 overflow-y-auto">
+                <form id="edit-case-form" class="space-y-4">
+                    <div id="edit-form-errors" class="text-red-600 text-sm mb-4 hidden"></div>
+                    <div>
+                        <label for="edit-caseId" class="text-sm font-medium text-gray-700">Fall-ID (z.B. aus SAP)</label>
+                        <input type="text" id="edit-caseId" inputmode="numeric" class="mt-1 p-2 border rounded-md w-full" required>
+                    </div>
+                    
+                    <div id="edit-shared-fields" class="space-y-4">
+                        <div><label for="edit-diagnosis" class="text-sm font-medium text-gray-700">Diagnose</label><input type="text" id="edit-diagnosis" class="mt-1 p-2 border rounded-md w-full"></div>
+                    </div>
+                    <div id="edit-anesthesia-fields" class="space-y-4">
+                        <div><label for="edit-dateOfAnesthesia" class="text-sm font-medium text-gray-700">Datum der Narkose</label><input type="date" id="edit-dateOfAnesthesia" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                        <div><label for="edit-dob" class="text-sm font-medium text-gray-700">Geburtsdatum Patient/in (optional)</label><input type="date" id="edit-dob" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                        <div><label for="edit-operation" class="text-sm font-medium text-gray-700">Operation</label><input type="text" id="edit-operation" class="mt-1 p-2 border rounded-md w-full"></div>
+                    </div>
+                    <div id="edit-intensive-fields" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label for="edit-treatmentStartDate" class="text-sm font-medium text-gray-700">Behandlungsbeginn</label><input type="date" id="edit-treatmentStartDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                            <div><label for="edit-treatmentEndDate" class="text-sm font-medium text-gray-700">Behandlungsende</label><input type="date" id="edit-treatmentEndDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="edit-common-fields-after" class="space-y-4">
+                        <div id="edit-category-selection-anesthesia">
+                            <label class="font-semibold block mb-2">Facharzt-Kategorie(n) Anästhesie:</label>
+                            <select id="edit-category-select-anesthesia" class="w-full p-2 border rounded-md bg-white custom-select"><option value="">Kategorie auswählen...</option></select>
+                            <div id="edit-category-tags-anesthesia" class="mt-3 flex flex-wrap gap-2"></div>
+                        </div>
+                        <div id="edit-category-selection-intensive">
+                            <label class="font-semibold block mb-2">Facharzt-Kategorie(n) Intensiv- und Notfallmedizin:</label>
+                            <select id="edit-category-select-intensive" class="w-full p-2 border rounded-md bg-white custom-select"><option value="">Kategorie auswählen...</option></select>
+                            <div id="edit-category-tags-intensive" class="mt-3 flex flex-wrap gap-2"></div>
+                        </div>
+                        <div><label for="edit-comments" class="text-sm font-medium text-gray-700">Kommentare (optional)</label><textarea id="edit-comments" class="mt-1 p-2 border rounded-md w-full" rows="3"></textarea></div>
+                    </div>
+                    <div class="pt-4 border-t flex justify-end">
+                        <button type="submit" class="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 transition-colors">Änderungen speichern</button>
+                    </div>
+                </form>
+             </div>
+        </div>
+    </div>
+
+    <!-- Modal für periphere Regionalanästhesie -->
+    <div id="regional-anaesthesia-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0 z-50">
+        <div class="modal-content bg-white rounded-lg shadow-xl max-w-lg w-full transform scale-95">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold">Details für Periphere Regionalanästhesie</h3>
+                <button id="regional-anaesthesia-modal-close-btn" class="text-2xl font-bold">&times;</button>
+            </div>
+            <div class="p-6">
+                <form id="regional-anaesthesia-form" class="space-y-3"></form>
+                <div class="pt-4 mt-4 border-t flex justify-end">
+                    <button id="save-regional-anaesthesia-btn" class="bg-blue-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600">Speichern & Hinzufügen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+
+        // --- Firebase Init ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBLRg7vMJ8qqhtxpR1aR6XvV9zpMLZ5QlI",
+            authDomain: "narkose-tracker.firebaseapp.com",
+            projectId: "narkose-tracker",
+            storageBucket: "narkose-tracker.appspot.com",
+            messagingSenderId: "221054080333",
+            appId: "1:221054080333:web:7df83083e71a5db6275304"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // --- Globaler Zustand & Konfiguration ---
+        let patients = [];
+        let userInfo = {
+            doctorName: '', doctorDob: '', clinic: '', supervisor: '',
+            trainingStartDate: '', trainingPeriods: [], externalPeriods: []
+        };
+        let manualOffsets = {};
+        let currentUserId = null;
+        let unsubscribe = () => {};
+        let currentCaseType = null;
+        let currentOffsetItemId = null;
+        let currentEditingCaseId = null;
+        let lastOpenedItemId = null;
+        let regionalAnaesthesiaContext = { formPrefix: '' };
+        let tempRegionalDetails = null;
+        let collapsibleStates = {}; // Zustand der Menüs speichern
+        let isInitialLoad = true; // Flag für den ersten Ladevorgang
+
+        const categoriesData = [
+            { id: "anaesthesia_general", displayCategory: "Allgemeine Anästhesien", type: "wbo", colorClasses: "bg-blue-100 text-blue-800", items: [ { id: "anaesthesieverfahren_gesamt", name: "Durchführung von Anästhesieverfahren", target: 1800 }, { id: "abdominelle_eingriffe", name: "davon bei abdominellen Eingriffen", target: 300, parent: "anaesthesieverfahren_gesamt" }, { id: "asa_3_plus", name: "davon bei Patienten mit mindestens ASA 3-Klassifikation", target: 100, parent: "anaesthesieverfahren_gesamt" }, ]},
+            { id: "anaesthesia_specific_procedure", displayCategory: "Spezielle Eingriffe", type: "wbo", colorClasses: "bg-green-100 text-green-800", items: [ { id: "kopf_hals", name: "Anästhesien bei Eingriffen im Kopf-Hals-Bereich", target: 100 }, { id: "intrakraniell", name: "Mitwirkung bei Anästhesien für intrakranielle Eingriffe", target: 25 }, { id: "intrathorakal", name: "Mitwirkung bei Anästhesien für intrathorakale Eingriffe", target: 25 }, { id: "ambulante_eingriffe", name: "Durchführung von Anästhesien bei ambulanten Eingriffen", target: 50 }, ]},
+            { id: "anaesthesia_specific_patients", displayCategory: "Spezielle Patientengruppen", type: "wbo", colorClasses: "bg-purple-100 text-purple-800", items: [ { id: "geburtshilfe_gesamt", name: "Anästhesieverfahren in der Geburtshilfe", target: 50 }, { id: "kaiserschnitte", name: "davon bei Kaiserschnitten", target: 25, parent: "geburtshilfe_gesamt" }, { id: "kinder_u5", name: "Anästhesien bei Säuglingen und Kleinkindern (bis 5 J.)", target: 50 }, ]},
+            { id: "regional_anaesthesia", displayCategory: "Regionalanästhesie", type: "wbo", colorClasses: "bg-yellow-100 text-yellow-800", items: [ { id: "regional_rueckenmark", name: "Rückenmarksnahe Regionalanästhesien", target: 50 }, { id: "regional_peripher", name: "Peripher-regionalanästhesiologische Verfahren", target: 50 }, ]},
+            { id: "techniques_interventions", displayCategory: "Techniken und Interventionen", type: "wbo", colorClasses: "bg-pink-100 text-pink-800", items: [ { id: "atemweg_fiberoptisch", name: "Fiberoptische Techniken", target: 25 }, { id: "atemweg_simulationen", name: "davon Simulationen", parent: "atemweg_fiberoptisch", target: 12 }, { id: "atemweg_video", name: "Videoassistierte Intubationsverfahren", target: 20 }, { id: "ultraschall", name: "Anästhesierelevante Ultraschallverfahren", target: 50 }, { id: "zvk", name: "Zentralvenöse Zugänge", target: 30 }, { id: "arterielle_zugaenge", name: "Arterielle Zugänge", target: 30 }, { id: "bronchoskopie", name: "Tracheo- und Bronchoskopien", target: 25 }, ]},
+            { id: "intensive_emergency_wbo", displayCategory: "Intensiv- und Notfallmedizin", type: "wbo", colorClasses: "bg-indigo-100 text-indigo-800", items: [ { id: "intensiv_multiorgan", name: "Intensivmed. Behandlung (mind. 2 Organsysteme)", target: 100 }, { id: "beatmung", name: "Atemunterstützende Maßnahmen/Beatmung", target: 50 }, { id: "pleurapunktion", name: "Pleurapunktionen, Pleuradrainagen", target: 5 }, { id: "zwischenfalltraining", name: "Zwischenfalltraining", target: 5 } ]},
+            { id: "other_intensive_emergency_cases", displayCategory: "Intensivmedizinische Fälle", type: "other", items: [ { id: "reanimationen", name: "Reanimationen", colorClass: "bg-red-100 text-red-800" }, { id: "ossare_zugaenge", name: "Ossäre Zugänge", colorClass: "bg-gray-100 text-gray-700" }, { id: "respiratorische_insuffizienz", name: "Respiratorische Insuffizienz", colorClass: "bg-blue-50 text-blue-700" }, { id: "kardiale_insuffizienz", name: "Kardiale Insuffizienz", colorClass: "bg-blue-50 text-blue-700" }, { id: "ein_mehre_organversagen", name: "Ein- und Mehrorganversagen", colorClass: "bg-blue-50 text-blue-700" }, { id: "delir", name: "Delir", colorClass: "bg-blue-50 text-blue-700" }, { id: "endokrine_stoerungen", name: "Endokrine Störungen", colorClass: "bg-blue-50 text-blue-700" }, { id: "erhoehter_hirndruck", name: "Erhöhter Hirndruck", colorClass: "bg-blue-50 text-blue-700" }, { id: "sepsis", name: "Sepsis", colorClass: "bg-blue-50 text-blue-700" }, { id: "trauma_polytrauma", name: "Trauma/Polytrauma", colorClass: "bg-blue-50 text-blue-700" }, { id: "schock", name: "Schock", colorClass: "bg-blue-50 text-blue-700" } ]}
+        ];
+        const allItems = categoriesData.flatMap(cat => cat.items);
+
+        const peripheralBlocks = [
+            { id: 'axplex', name: 'AxPlex' }, { id: 'supraclav', name: 'Supraclav. Plex' },
+            { id: 'infraclav', name: 'Infraclav. Plex' }, { id: 'interskalen', name: 'Interskalen. Plex' },
+            { id: 'nfb', name: 'NFB' }, { id: 'nib', name: 'NIB' }, { id: 'nsb', name: 'NSB' }
+        ];
+
+        // --- Hilfsfunktionen ---
+        const getElement = id => document.getElementById(id);
+        const getItemById = (id) => allItems.find(item => item.id === id);
+        
+        // --- Modal- & Nachrichtenfunktionen ---
+        function openModal(el) { el.classList.remove('hidden'); setTimeout(() => { el.classList.remove('opacity-0'); el.querySelector('.modal-content').classList.remove('scale-95'); }, 10); }
+        function closeModal(el) { el.classList.add('opacity-0'); el.querySelector('.modal-content').classList.add('scale-95'); setTimeout(() => el.classList.add('hidden'), 300); }
+        function showCustomMessage(title, message, type = 'alert', cb = null) {
+            const modal = getElement('custom-message-modal');
+            getElement('custom-message-title').textContent = title;
+            getElement('custom-message-text').textContent = message;
+            const okBtn = getElement('custom-message-ok-btn');
+            const cancelBtn = getElement('custom-message-cancel-btn');
+            const newOkBtn = okBtn.cloneNode(true); okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+            const newCancelBtn = cancelBtn.cloneNode(true); cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+            newOkBtn.addEventListener('click', () => { closeModal(modal); if (cb) cb(true); });
+            if (type === 'confirm') {
+                newCancelBtn.classList.remove('hidden');
+                newCancelBtn.addEventListener('click', () => { closeModal(modal); if (cb) cb(false); });
+            } else {
+                newCancelBtn.classList.add('hidden');
+            }
+            openModal(modal);
+        }
+
+        // --- Kernlogik der Anwendung ---
+        async function saveData() {
+            if (!currentUserId) return;
+            try {
+                const userInfoToSave = JSON.parse(JSON.stringify(userInfo));
+                (userInfoToSave.trainingPeriods || []).forEach(p => { delete p.isEditing; delete p.isNew; });
+                (userInfoToSave.externalPeriods || []).forEach(p => { delete p.isEditing; delete p.isNew; });
+
+                await setDoc(doc(db, "users", currentUserId), { userInfo: userInfoToSave, patients, manualOffsets });
+            } catch (e) { console.error("Error writing document: ", e); showCustomMessage("Fehler", "Fehler beim Speichern der Daten."); }
+        }
+
+
+        function renderAll() {
+            updateUserInfoDisplay();
+            renderTrainingHistory();
+            calculatePrognosis();
+            populateCategoryDropdowns(getElement('category-select-anesthesia'), getElement('category-tags-anesthesia'), getElement('category-select-intensive'), getElement('category-tags-intensive'));
+            renderProcedureListsAndTiles();
+            updateAllCounts();
+        }
+        
+        function updateUserInfoDisplay() {
+            getElement('display-doctorName').textContent = userInfo.doctorName || 'N/A';
+            getElement('display-doctorDob').textContent = userInfo.doctorDob ? new Date(userInfo.doctorDob + 'T00:00:00').toLocaleDateString('de-DE') : 'N/A';
+            getElement('display-clinic').textContent = userInfo.clinic || 'N/A';
+            getElement('display-supervisor').textContent = userInfo.supervisor || 'N/A';
+            getElement('doctorName').value = userInfo.doctorName;
+            getElement('doctorDob').value = userInfo.doctorDob;
+            getElement('clinic').value = userInfo.clinic;
+            getElement('supervisor').value = userInfo.supervisor;
+        }
+
+        function updateCollapsibleHeight() {
+            const content = getElement('training-history-content');
+            const header = getElement('training-history-header');
+            if (header.classList.contains('open')) {
+                content.style.transition = 'none';
+                content.style.maxHeight = content.scrollHeight + "px";
+                content.offsetHeight;
+                content.style.transition = '';
+            }
+        }
+
+        function renderTrainingHistory() {
+            getElement('training-start-date').value = userInfo.trainingStartDate || '';
+            
+            const periodsContainer = getElement('training-periods-container');
+            periodsContainer.innerHTML = '';
+            (userInfo.trainingPeriods || []).forEach((period, index) => {
+                periodsContainer.appendChild(createPeriodElement(period, index, 'training'));
+            });
+
+            const externalContainer = getElement('external-periods-container');
+            externalContainer.innerHTML = '';
+            (userInfo.externalPeriods || []).forEach((period, index) => {
+                externalContainer.appendChild(createPeriodElement(period, index, 'external'));
+            });
+
+            setTimeout(updateCollapsibleHeight, 50);
+        }
+
+        function createPeriodElement(period, index, type) {
+            const div = document.createElement('div');
+            div.className = 'training-period-item p-3 border rounded-md';
+            div.dataset.index = index;
+            div.dataset.type = type;
+
+            if (period.isEditing) {
+                div.innerHTML = getPeriodEditHTML(period, type);
+            } else {
+                div.innerHTML = getPeriodDisplayHTML(period, type);
+            }
+            return div;
+        }
+
+        function getPeriodDisplayHTML(period, type) {
+            const fDate = (date) => date ? new Date(date + 'T00:00:00').toLocaleDateString('de-DE') : 'N/A';
+            const externalFields = type === 'external' 
+                ? `<div><strong class="block text-xs text-gray-500">Anrechenbare Monate:</strong> ${period.anrechenbar || 0}</div>`
+                : '';
+
+            return `
+                <div class="flex justify-between items-start">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm flex-grow">
+                        <div><strong class="block text-xs text-gray-500">Zeitraum:</strong> ${fDate(period.start)} - ${fDate(period.end)}</div>
+                        <div><strong class="block text-xs text-gray-500">Anteil:</strong> ${period.anteil || 100}%</div>
+                        <div><strong class="block text-xs text-gray-500">Klinikum:</strong> ${period.klinikum || 'N/A'}</div>
+                        <div><strong class="block text-xs text-gray-500">Abteilung:</strong> ${period.abteilung || 'N/A'}</div>
+                        <div><strong class="block text-xs text-gray-500">Bevollmächtigte(r):</strong> ${period.supervisor || 'N/A'}</div>
+                        ${externalFields}
+                    </div>
+                    <div class="flex-shrink-0 flex items-center gap-2 ml-2">
+                        <button type="button" class="edit-period-btn icon-btn" title="Bearbeiten">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="pointer-events-none" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" /></svg>
+                        </button>
+                        <button type="button" class="remove-period-btn icon-btn text-red-500" title="Löschen">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="pointer-events-none" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function getPeriodEditHTML(period, type) {
+            const externalInputs = type === 'external'
+                ? `<div><label class="text-xs text-gray-500">Anrechenbare Monate</label><input type="number" value="${period.anrechenbar || 0}" class="p-2 border rounded-md w-full" data-field="anrechenbar" step="0.1" min="0"></div>`
+                : '';
+            const gridCols = type === 'external' ? 'md:grid-cols-4' : 'md:grid-cols-3';
+
+            return `
+                <div class="space-y-2">
+                    <div class="grid grid-cols-1 ${gridCols} gap-2">
+                        <div><label class="text-xs text-gray-500">Startdatum</label><input type="date" value="${period.start || ''}" class="p-2 border rounded-md w-full" data-field="start"></div>
+                        <div><label class="text-xs text-gray-500">Enddatum</label><input type="date" value="${period.end || ''}" class="p-2 border rounded-md w-full" data-field="end"></div>
+                        <div><label class="text-xs text-gray-500">Anteil (%)</label><input type="number" value="${period.anteil || 100}" class="p-2 border rounded-md w-full" data-field="anteil" min="1" max="100"></div>
+                        ${externalInputs}
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <div><label class="text-xs text-gray-500">Klinikum</label><input type="text" value="${period.klinikum || ''}" class="p-2 border rounded-md w-full" data-field="klinikum"></div>
+                        <div><label class="text-xs text-gray-500">Abteilung</label><input type="text" value="${period.abteilung || ''}" class="p-2 border rounded-md w-full" data-field="abteilung"></div>
+                        <div><label class="text-xs text-gray-500">Bevollmächtigte(r)</label><input type="text" value="${period.supervisor || ''}" class="p-2 border rounded-md w-full" data-field="supervisor"></div>
+                    </div>
+                    <div class="flex items-center gap-2 justify-end pt-2">
+                        <button type="button" class="cancel-period-btn text-sm text-gray-600 hover:underline">Abbrechen</button>
+                        <button type="button" class="save-period-btn px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded-md hover:bg-green-600">Speichern</button>
+                    </div>
+                </div>
+            `;
+        }
+
+
+        function calculatePrognosis() {
+            let completedMonths = 0;
+            const today = new Date();
+            (userInfo.trainingPeriods || []).forEach(p => {
+                if(p.start) {
+                    const startDate = new Date(p.start);
+                    const endDate = p.end ? new Date(p.end) : today;
+                    if(startDate < endDate) {
+                        const diffTime = Math.abs(endDate - startDate);
+                        const diffDays = (diffTime / (1000 * 60 * 60 * 24)) + 1;
+                        completedMonths += (diffDays / 30.4375) * ((p.anteil || 100) / 100);
+                    }
+                }
+            });
+            (userInfo.externalPeriods || []).forEach(p => {
+                completedMonths += parseFloat(p.anrechenbar) || 0;
+            });
+            
+            const totalRequiredMonths = 60;
+            getElement('completed-months-display').textContent = `${completedMonths.toFixed(1)} / ${totalRequiredMonths}`;
+            const progressPercentage = Math.min(100, (completedMonths / totalRequiredMonths) * 100);
+            getElement('prognosis-progress-bar').style.width = `${progressPercentage}%`;
+
+            if (!userInfo.trainingStartDate) {
+                 getElement('prognosis-end-date-display').textContent = "Startdatum fehlt";
+                 return;
+            }
+
+            const remainingMonths = Math.max(0, totalRequiredMonths - completedMonths);
+            if (remainingMonths > 0) {
+                let prognosisDate = new Date(); 
+                prognosisDate.setMonth(prognosisDate.getMonth() + remainingMonths);
+                getElement('prognosis-end-date-display').textContent = prognosisDate.toLocaleDateString('de-DE');
+            } else {
+                getElement('prognosis-end-date-display').textContent = "Abgeschlossen!";
+            }
+        }
+        
+        function createOptgroup(cat, allExistingTagIds) {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = cat.displayCategory.replace('(WBO-relevant)', '').trim();
+
+            const itemsInGroup = cat.items.filter(item => !allExistingTagIds.includes(item.id));
+            if (itemsInGroup.length === 0) return null;
+
+            itemsInGroup.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.innerHTML = item.parent ? `&nbsp;&nbsp;→ ${item.name}` : `&nbsp;${item.name}`;
+                optgroup.appendChild(option);
+            });
+            return optgroup;
+        }
+
+        function populateCategoryDropdowns(anesthesiaContainer, anesthesiaTagsContainer, intensiveContainer, intensiveTagsContainer) {
+            const allExistingTagIds = [...anesthesiaTagsContainer.children, ...intensiveTagsContainer.children].map(tag => tag.dataset.id);
+
+            anesthesiaContainer.innerHTML = '<option value="">Kategorie auswählen...</option>';
+            intensiveContainer.innerHTML = '<option value="">Kategorie auswählen...</option>';
+            
+            const anesthesiaCats = ["anaesthesia_general", "anaesthesia_specific_procedure", "anaesthesia_specific_patients", "regional_anaesthesia", "techniques_interventions"];
+            const intensiveCats = ["intensive_emergency_wbo", "other_intensive_emergency_cases", "techniques_interventions"];
+
+            categoriesData.filter(c => anesthesiaCats.includes(c.id)).forEach(cat => {
+                const optgroup = createOptgroup(cat, allExistingTagIds);
+                if(optgroup) anesthesiaContainer.appendChild(optgroup);
+            });
+            categoriesData.filter(c => intensiveCats.includes(c.id)).forEach(cat => {
+                 const optgroup = createOptgroup(cat, allExistingTagIds);
+                if(optgroup) intensiveContainer.appendChild(optgroup);
+            });
+        }
+        
+        function renderProcedureListsAndTiles() {
+            const listContainer = getElement('wbo-procedure-list');
+            listContainer.innerHTML = '';
+            getElement('other-tiles-container').innerHTML = '';
+            
+            categoriesData.filter(cat => cat.type === "wbo").forEach(cat => {
+                const catDiv = document.createElement('div');
+                catDiv.className = 'card mb-4 overflow-hidden';
+                catDiv.dataset.catId = cat.id; // ID für Zustandsspeicherung
+        
+                const header = document.createElement('div');
+                header.className = 'collapsible-header flex justify-between items-center cursor-pointer p-4 md:p-6';
+                header.innerHTML = `
+                    <h2 class="text-xl font-bold text-gray-700">${cat.displayCategory}</h2>
+                    <svg class="w-6 h-6 text-gray-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                `;
+        
+                const content = document.createElement('div');
+                content.className = 'collapsible-content';
+        
+                const itemsDiv = document.createElement('div');
+                itemsDiv.className = 'space-y-4 p-4 md:p-6 pt-4 border-t border-gray-200';
+                
+                cat.items.filter(i => i.target !== undefined).forEach(item => {
+                    itemsDiv.innerHTML += `<div class="item-container" data-id="${item.id}" data-name="${item.name}"><div class="flex justify-between items-start"><div><p class="font-semibold text-gray-800 flex items-center">${item.parent ? '<span class="text-gray-400 mr-2">→</span>' : ''}<span>${item.name}</span></p></div><button class="details-btn px-3 py-1 bg-gray-200 text-sm font-semibold rounded-md hover:bg-gray-300" data-item-id="${item.id}">Details</button></div><div class="w-full mt-2"><div class="flex justify-between mb-1 items-end"><span id="progress-text-${item.id}">0 / ${item.target}</span><span id="count-details-${item.id}"></span></div><div class="w-full progress-bar-bg rounded-full h-2.5"><div id="progress-${item.id}" class="progress-bar-fill h-2.5 rounded-full" style="width: 0%;"></div></div></div></div>`;
+                });
+        
+                if (itemsDiv.children.length > 0) {
+                    content.appendChild(itemsDiv);
+                    catDiv.appendChild(header);
+                    catDiv.appendChild(content);
+                    listContainer.appendChild(catDiv);
+                }
+            });
+
+            // Spezielles Rendering für periphere Regionalanästhesie
+            const regionalPeripherContainer = document.querySelector("[data-id='regional_peripher']");
+            if (regionalPeripherContainer) {
+                const pTag = regionalPeripherContainer.querySelector('p');
+                pTag.classList.add('cursor-pointer', 'collapsible-header-sub');
+                pTag.dataset.id = 'regional_peripher_sub'; // Eindeutige ID für Zustandsspeicherung
+                pTag.innerHTML += ` <svg class="inline-block w-4 h-4 text-gray-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
+                
+                const detailsContainer = document.createElement('div');
+                detailsContainer.id = 'regional-peripher-details';
+                detailsContainer.className = 'collapsible-content pl-6 pt-3 mt-2 border-l-2 border-gray-200 space-y-2';
+                
+                detailsContainer.innerHTML = peripheralBlocks.map(block => `
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-700">${block.name}</span>
+                        <span id="count-text-${block.id}" class="font-mono text-gray-600">0 (davon 0 mit Katheter)</span>
+                    </div>
+                `).join('');
+                regionalPeripherContainer.appendChild(detailsContainer);
+            }
+
+            const otherContainer = getElement('other-tiles-container');
+            otherContainer.innerHTML = categoriesData.filter(c => c.type === 'other').flatMap(c => c.items).map(item => `<div class="card p-4 text-center ${item.colorClass || 'bg-gray-100'}"><h4 class="text-lg font-semibold">${item.name}</h4><p id="tile-count-${item.id}" class="text-3xl font-bold mt-2">0</p><span id="tile-manual-offset-${item.id}" class="text-xs flex items-center justify-center mt-1">Manuell: 0 <button class="edit-offset-btn ml-1" data-id="${item.id}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" /><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" /></svg></button></span><button class="tile-details-btn mt-2 px-3 py-1 bg-gray-200 text-sm font-semibold rounded-md hover:bg-gray-300" data-item-id="${item.id}">Details</button></div>`).join('');
+            getElement('other-procedure-tiles').classList.toggle('hidden', otherContainer.innerHTML === '');
+        }
+
+        function updateAllCounts() {
+            let totalWboCurrent = 0, totalWboTarget = 0;
+            allItems.forEach(item => {
+                const patientCount = patients.filter(p => p.categories.includes(item.id)).length;
+                const manualOffset = manualOffsets[item.id] || 0;
+                const totalCount = patientCount + manualOffset;
+                if (item.target !== undefined) {
+                    const progress = item.target > 0 ? Math.min(100, (totalCount / item.target) * 100) : 0;
+                    const fillEl = getElement(`progress-${item.id}`);
+                    if (fillEl) { fillEl.style.width = `${progress}%`; fillEl.classList.toggle('bg-emerald-500', progress >= 100); fillEl.classList.toggle('progress-bar-fill', progress < 100); }
+                    getElement(`progress-text-${item.id}`).textContent = `${totalCount} / ${item.target}`;
+                    getElement(`count-details-${item.id}`).innerHTML = `Manuell: ${manualOffset}<button class="edit-offset-btn ml-1" data-id="${item.id}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" /><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" /></svg></button>, Fälle: ${patientCount}`;
+                    totalWboCurrent += totalCount;
+                    totalWboTarget += item.target;
+                } else {
+                    const tileCountEl = getElement(`tile-count-${item.id}`);
+                    if(tileCountEl) tileCountEl.textContent = totalCount;
+                    getElement(`tile-manual-offset-${item.id}`).innerHTML = `Manuell: ${manualOffset}<button class="edit-offset-btn ml-1" data-id="${item.id}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" /><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" /></svg></button>`;
+                }
+            });
+            const percentage = totalWboTarget > 0 ? (totalWboCurrent / totalWboTarget) * 100 : 0;
+            getElement('overall-progress-fill').style.width = `${Math.min(100, percentage)}%`;
+            getElement('overall-progress-text').textContent = `${percentage.toFixed(1)}%`;
+            getElement('overall-progress-card').classList.toggle('hidden', totalWboTarget === 0);
+
+            // Zählung für periphere Regionalanästhesie
+            const peripheralCounts = {};
+            peripheralBlocks.forEach(b => { peripheralCounts[b.id] = { total: 0, catheter: 0 }; });
+
+            patients.forEach(p => {
+                if (p.regionalAnaesthesiaDetails) {
+                    for (const blockId in p.regionalAnaesthesiaDetails) {
+                        if (peripheralCounts[blockId]) {
+                            peripheralCounts[blockId].total++;
+                            if (p.regionalAnaesthesiaDetails[blockId] === true) { // Katheter benutzt
+                                peripheralCounts[blockId].catheter++;
+                            }
+                        }
+                    }
+                }
+            });
+
+            // DOM für periphere Zählungen aktualisieren
+            for (const blockId in peripheralCounts) {
+                const countEl = getElement(`count-text-${blockId}`);
+                if (countEl) {
+                    countEl.textContent = `${peripheralCounts[blockId].total} (davon ${peripheralCounts[blockId].catheter} mit Katheter)`;
+                }
+            }
+        }
+
+        function setCaseType(type) {
+            currentCaseType = type;
+            ['anesthesia', 'intensive'].forEach(t => getElement(`case-type-${t}`).classList.toggle('active', t === type));
+            getElement('shared-fields').classList.toggle('hidden', type === null);
+            getElement('common-fields-after').classList.toggle('hidden', type === null);
+            getElement('anesthesia-fields').classList.toggle('hidden', type !== 'anesthesia');
+            getElement('intensive-fields').classList.toggle('hidden', type !== 'intensive');
+            getElement('category-selection-anesthesia').classList.toggle('hidden', type !== 'anesthesia');
+            getElement('category-selection-intensive').classList.toggle('hidden', type !== 'intensive');
+            if(type === null) {
+                getElement('category-tags-anesthesia').innerHTML = '';
+                getElement('category-tags-intensive').innerHTML = '';
+            }
+        };
+        
+        function addCategoryTag(id, tagsContainer, isAutoAdd = false) {
+            const allExistingTagIds = [...tagsContainer.parentElement.querySelectorAll('.category-tag')].map(tag => tag.dataset.id);
+            if (allExistingTagIds.includes(id)) return;
+        
+            const item = getItemById(id);
+            if (!item) return;
+
+            if (!isAutoAdd) {
+                // Automatische Zuordnung verwandter Kategorien
+                if (id === 'intrakraniell') addCategoryTag('kopf_hals', tagsContainer, true);
+                if (id === 'kaiserschnitte') addCategoryTag('abdominelle_eingriffe', tagsContainer, true);
+
+                const itemGroup = categoriesData.find(cat => cat.items.some(i => i.id === id));
+                const pureAnesthesiaGroups = ["anaesthesia_general", "anaesthesia_specific_procedure", "anaesthesia_specific_patients", "regional_anaesthesia"];
+                
+                const isPureAnesthesiaCategory = itemGroup && pureAnesthesiaGroups.includes(itemGroup.id);
+                
+                if (item.id !== "anaesthesieverfahren_gesamt" && isPureAnesthesiaCategory) {
+                    if (!allExistingTagIds.includes("anaesthesieverfahren_gesamt")) {
+                        addCategoryTag("anaesthesieverfahren_gesamt", getElement('category-tags-anesthesia'), true);
+                    }
+                }
+            }
+
+            if (item.parent && !allExistingTagIds.includes(item.parent)) {
+                 addCategoryTag(item.parent, tagsContainer, true);
+            }
+
+            const group = categoriesData.find(cat => cat.items.some(i => i.id === id));
+            const tag = document.createElement('div');
+            tag.className = `category-tag inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${group?.colorClasses || 'bg-gray-200'}`;
+            tag.dataset.id = id;
+            tag.innerHTML = `<span>${item.name}</span><button type="button" class="category-tag-remove-btn">&times;</button>`;
+            tagsContainer.appendChild(tag);
+        }
+
+        function resetForm() { 
+            getElement('add-patient-form').reset(); 
+            setCaseType(null); 
+            tempRegionalDetails = null; 
+        };
+
+        function showPatientModal(itemId) {
+            lastOpenedItemId = itemId;
+            const item = getItemById(itemId);
+            getElement('modal-title').textContent = `Details für: ${item.name}`;
+            const body = getElement('modal-body');
+            const patientList = patients.filter(p => p.categories.includes(itemId));
+            
+            if (patientList.length === 0) { 
+                body.innerHTML = '<p class="text-gray-600">Keine Fälle für diese Kategorie erfasst.</p>'; 
+            } else {
+                body.innerHTML = `<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Datum/Zeitraum</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Fall-ID</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Diagnose/OP</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Kommentar</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Aktion</th></tr></thead><tbody class="bg-white divide-y">${patientList.sort((a,b) => new Date(b.dateOfAnesthesia || b.treatmentEndDate) - new Date(a.dateOfAnesthesia || a.treatmentEndDate)).map(p => `<tr><td class="px-6 py-4 whitespace-nowrap text-sm">${p.caseType === 'anesthesia' ? (p.dateOfAnesthesia ? new Date(p.dateOfAnesthesia+'T00:00:00').toLocaleDateString('de-DE') : 'N/A') : `${p.treatmentStartDate ? new Date(p.treatmentStartDate+'T00:00:00').toLocaleDateString('de-DE') : ''} - ${p.treatmentEndDate ? new Date(p.treatmentEndDate+'T00:00:00').toLocaleDateString('de-DE') : ''}`}</td><td class="px-6 py-4 whitespace-nowrap text-sm">${p.caseId}</td><td class="px-6 py-4 text-sm"><div class="font-semibold">${p.operation || p.diagnosis || ''}</div><div class="text-gray-500">${p.operation ? p.diagnosis : ''}</div></td><td class="px-6 py-4 text-sm">${p.comments || ''}</td><td class="px-6 py-4 whitespace-nowrap text-sm"><button class="edit-case-btn text-indigo-600 hover:text-indigo-900 font-semibold" data-case-id="${p.id}">Bearbeiten</button></td></tr>`).join('')}</tbody></table></div>`;
+            }
+            openModal(getElement('patient-modal'));
+        }
+        
+        function openEditCaseModal(caseId) {
+            currentEditingCaseId = caseId;
+            const caseToEdit = patients.find(p => p.id === caseId);
+            if (!caseToEdit) return;
+
+            const modal = getElement('edit-case-modal');
+            const anaesthesiaFields = modal.querySelector('#edit-anesthesia-fields');
+            const intensiveFields = modal.querySelector('#edit-intensive-fields');
+            const anaesthesiaCatSelection = modal.querySelector('#edit-category-selection-anesthesia');
+            const intensiveCatSelection = modal.querySelector('#edit-category-selection-intensive');
+
+            modal.querySelector('#edit-caseId').value = caseToEdit.caseId;
+            modal.querySelector('#edit-diagnosis').value = caseToEdit.diagnosis || '';
+            modal.querySelector('#edit-comments').value = caseToEdit.comments || '';
+            
+            if (caseToEdit.caseType === 'anesthesia') {
+                anaesthesiaFields.classList.remove('hidden');
+                intensiveFields.classList.add('hidden');
+                anaesthesiaCatSelection.classList.remove('hidden');
+                intensiveCatSelection.classList.add('hidden');
+                modal.querySelector('#edit-dateOfAnesthesia').value = caseToEdit.dateOfAnesthesia;
+                modal.querySelector('#edit-dob').value = caseToEdit.dob;
+                modal.querySelector('#edit-operation').value = caseToEdit.operation;
+            } else {
+                anaesthesiaFields.classList.add('hidden');
+                intensiveFields.classList.remove('hidden');
+                anaesthesiaCatSelection.classList.add('hidden');
+                intensiveCatSelection.classList.remove('hidden');
+                modal.querySelector('#edit-treatmentStartDate').value = caseToEdit.treatmentStartDate;
+                modal.querySelector('#edit-treatmentEndDate').value = caseToEdit.treatmentEndDate;
+            }
+            
+            const anaesthesiaTagsContainer = getElement('edit-category-tags-anesthesia');
+            const intensiveTagsContainer = getElement('edit-category-tags-intensive');
+            anaesthesiaTagsContainer.innerHTML = '';
+            intensiveTagsContainer.innerHTML = '';
+
+            caseToEdit.categories.forEach(catId => {
+                const itemGroup = categoriesData.find(cat => cat.items.some(i => i.id === catId));
+                if (itemGroup.id.includes('intensive') || itemGroup.id.includes('emergency')) {
+                     addCategoryTag(catId, intensiveTagsContainer, true);
+                } else {
+                     addCategoryTag(catId, anaesthesiaTagsContainer, true);
+                }
+            });
+            
+            populateCategoryDropdowns(getElement('edit-category-select-anesthesia'), anaesthesiaTagsContainer, getElement('edit-category-select-intensive'), intensiveTagsContainer);
+
+            openModal(modal);
+        }
+
+        function exportLogbookAsCSV() {
+            const headers = ["Fall-Typ", "Datum", "Fall-ID", "Diagnose", "Operation", "Kommentar", "Zugeordnete Kategorien"];
+            const rows = patients.map(p => {
+                const date = p.caseType === 'anesthesia' ? (p.dateOfAnesthesia || '') : `${p.treatmentStartDate || ''} bis ${p.treatmentEndDate || ''}`;
+                const categories = (p.categories || []).map(id => `"${getItemById(id)?.name || id}"`).join('; ');
+                const escape = (str) => `"${(str || '').replace(/"/g, '""')}"`;
+                return [
+                    escape(p.caseType === 'anesthesia' ? 'Narkose' : 'Intensiv'),
+                    escape(date),
+                    escape(p.caseId),
+                    escape(p.diagnosis),
+                    escape(p.operation),
+                    escape(p.comments),
+                    escape(categories)
+                ].join(',');
+            });
+            const csvContent = "data:text/csv;charset=utf-8," + [headers.join(',')].concat(rows).join('\r\n');
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `A&I-Logbuch_Export_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function openRegionalAnaesthesiaModal(prefix = '') {
+            regionalAnaesthesiaContext.formPrefix = prefix;
+            const form = getElement('regional-anaesthesia-form');
+            form.innerHTML = peripheralBlocks.map(block => `
+                <div class="flex items-center justify-between p-2 rounded-md hover:bg-gray-50">
+                    <label for="${block.id}-checkbox" class="flex-grow font-medium text-gray-700">${block.name}</label>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="${block.id}-checkbox" name="${block.id}" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                        <label for="${block.id}-katheter-checkbox" class="ml-4 mr-2 text-sm text-gray-600">mit Katheter</label>
+                        <input type="checkbox" id="${block.id}-katheter-checkbox" name="${block.id}-katheter" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                    </div>
+                </div>
+            `).join('');
+            openModal(getElement('regional-anaesthesia-modal'));
+        }
+
+        function saveCollapsibleStates() {
+            document.querySelectorAll('.collapsible-header, .collapsible-header-sub').forEach(header => {
+                const id = header.closest('[data-cat-id]')?.dataset.catId || header.dataset.id;
+                if (id) {
+                    collapsibleStates[id] = header.classList.contains('open');
+                }
+            });
+        }
+
+        function restoreCollapsibleStates() {
+            for (const id in collapsibleStates) {
+                if (collapsibleStates[id]) {
+                    const header = document.querySelector(`[data-cat-id="${id}"] > .collapsible-header, [data-id="${id}"]`);
+                    if (header) {
+                        header.classList.add('open');
+                        const content = header.classList.contains('collapsible-header')
+                            ? header.nextElementSibling
+                            : header.closest('.item-container').querySelector('.collapsible-content');
+                        if (content) {
+                            content.style.maxHeight = content.scrollHeight + "px";
+                        }
+                    }
+                }
+            }
+        }
+
+        // --- Event Listener ---
+        document.addEventListener('DOMContentLoaded', () => {
+             // Service Worker Registrierung
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('./sw.js').then(registration => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    }, err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+                });
+            }
+
+            onAuthStateChanged(auth, user => {
+                const loadingOverlay = getElement('loading-overlay');
+                const authContainer = getElement('auth-container');
+                const appContainer = getElement('app-container');
+                
+                loadingOverlay.style.display = 'flex';
+                if (user) {
+                    currentUserId = user.uid;
+                    getElement('user-email-display').textContent = user.email;
+                    
+                    unsubscribe = onSnapshot(doc(db, "users", currentUserId), (docSnap) => {
+                        saveCollapsibleStates();
+                        const defaultUserInfo = { doctorName: '', doctorDob: '', clinic: '', supervisor: '', trainingStartDate: '', trainingPeriods: [], externalPeriods: [] };
+                        if (docSnap.exists()) {
+                            const data = docSnap.data();
+                            patients = data.patients || [];
+                            userInfo = { ...defaultUserInfo, ...(data.userInfo || {}) };
+                            manualOffsets = data.manualOffsets || {};
+                        } else {
+                            patients = []; 
+                            userInfo = defaultUserInfo;
+                            manualOffsets = {};
+                            saveData(); 
+                        }
+
+                        if (isInitialLoad) {
+                            renderAll();
+                            isInitialLoad = false;
+                        } else {
+                            updateAllCounts();
+                        }
+
+                        restoreCollapsibleStates();
+                        const lastUpdatedDisplay = getElement('last-updated-display');
+                        if (lastUpdatedDisplay) {
+                            lastUpdatedDisplay.textContent = new Date().toLocaleString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+                        }
+                    }, (error) => {
+                        console.error("Error listening to document: ", error);
+                        showCustomMessage("Fehler", "Fehler bei der Daten-Synchronisation.");
+                    });
+                    
+                    authContainer.classList.add('hidden');
+                    appContainer.classList.remove('hidden');
+                } else {
+                    currentUserId = null;
+                    if (typeof unsubscribe === 'function') unsubscribe();
+                    patients = []; 
+                    userInfo = { doctorName: '', doctorDob: '', clinic: '', supervisor: '', trainingStartDate: '', trainingPeriods: [], externalPeriods: [] };
+                    manualOffsets = {};
+                    authContainer.classList.remove('hidden');
+                    appContainer.classList.add('hidden');
+                }
+                loadingOverlay.style.display = 'none';
+            });
+            
+            getElement('login-form').addEventListener('submit', (e) => { e.preventDefault(); signInWithEmailAndPassword(auth, getElement('login-email').value, getElement('login-password').value).catch(err => getElement('auth-error').textContent = "Anmeldung fehlgeschlagen."); });
+            getElement('register-form').addEventListener('submit', (e) => { e.preventDefault(); createUserWithEmailAndPassword(auth, getElement('register-email').value, getElement('register-password').value).catch(err => getElement('auth-error').textContent = "Registrierung fehlgeschlagen."); });
+            getElement('logout-btn').addEventListener('click', () => signOut(auth));
+            getElement('toggle-auth-mode').addEventListener('click', () => { 
+                getElement('login-form').classList.toggle('hidden'); 
+                getElement('register-form').classList.toggle('hidden');
+                getElement('auth-error').textContent = '';
+                getElement('toggle-auth-mode').textContent = getElement('login-form').classList.contains('hidden') ? 'Bereits einen Account? Hier anmelden.' : 'Noch kein Account? Hier registrieren.';
+            });
+
+            getElement('training-history-header').addEventListener('click', () => {
+                const header = getElement('training-history-header');
+                const content = getElement('training-history-content');
+                header.classList.toggle('open');
+                content.style.maxHeight = header.classList.contains('open') ? content.scrollHeight + "px" : null;
+            });
+            
+            getElement('training-start-date').addEventListener('change', () => { 
+                userInfo.trainingStartDate = getElement('training-start-date').value;
+                saveData(); 
+            });
+
+            function handlePeriodAction(e) {
+                const target = e.target.closest('button');
+                if (!target) return;
+                
+                const itemDiv = target.closest('.training-period-item');
+                if (!itemDiv) return;
+
+                const index = parseInt(itemDiv.dataset.index, 10);
+                const type = itemDiv.dataset.type;
+                const periodArray = type === 'training' ? userInfo.trainingPeriods : userInfo.externalPeriods;
+                
+                if (target.classList.contains('edit-period-btn')) {
+                    periodArray.forEach(p => delete p.isEditing); 
+                    periodArray[index].isEditing = true;
+                    renderTrainingHistory();
+                } else if (target.classList.contains('cancel-period-btn')) {
+                    if (periodArray[index].isNew) {
+                         periodArray.splice(index, 1);
+                    } else {
+                        delete periodArray[index].isEditing;
+                    }
+                    renderTrainingHistory();
+                } else if (target.classList.contains('remove-period-btn')) {
+                    showCustomMessage('Abschnitt löschen', 'Möchten Sie diesen Abschnitt wirklich endgültig löschen?', 'confirm', (confirmed) => {
+                        if (confirmed) {
+                            periodArray.splice(index, 1);
+                            saveData();
+                        }
+                    });
+                } else if (target.classList.contains('save-period-btn')) {
+                    const newPeriodData = {
+                        start: itemDiv.querySelector('[data-field="start"]').value,
+                        end: itemDiv.querySelector('[data-field="end"]').value,
+                        anteil: itemDiv.querySelector('[data-field="anteil"]').value,
+                        klinikum: itemDiv.querySelector('[data-field="klinikum"]').value,
+                        abteilung: itemDiv.querySelector('[data-field="abteilung"]').value,
+                        supervisor: itemDiv.querySelector('[data-field="supervisor"]').value,
+                    };
+                    if (type === 'external') {
+                        newPeriodData.anrechenbar = itemDiv.querySelector('[data-field="anrechenbar"]').value;
+                    }
+                    delete periodArray[index].isEditing;
+                    delete periodArray[index].isNew; 
+                    periodArray[index] = { ...periodArray[index], ...newPeriodData };
+                    saveData();
+                }
+            }
+
+            getElement('training-periods-container').addEventListener('click', handlePeriodAction);
+            getElement('external-periods-container').addEventListener('click', handlePeriodAction);
+            
+            getElement('add-training-period-btn').addEventListener('click', () => { 
+                userInfo.trainingPeriods.push({ start: '', end: '', anteil: 100, klinikum: '', abteilung: '', supervisor: '', isEditing: true, isNew: true });
+                renderTrainingHistory();
+            });
+            getElement('add-external-period-btn').addEventListener('click', () => { 
+                userInfo.externalPeriods.push({ start: '', end: '', anteil: 100, anrechenbar: 0, klinikum: '', abteilung: '', supervisor: '', isEditing: true, isNew: true });
+                renderTrainingHistory();
+            });
+            
+            getElement('case-type-anesthesia').addEventListener('click', () => setCaseType('anesthesia'));
+            getElement('case-type-intensive').addEventListener('click', () => setCaseType('intensive'));
+            
+            function handleCategorySelect(selectElement, tagsContainer, isEdit) {
+                const prefix = isEdit ? 'edit-' : '';
+                if (selectElement.value) {
+                    if (selectElement.value === 'regional_peripher') {
+                        openRegionalAnaesthesiaModal(prefix);
+                    } else {
+                        addCategoryTag(selectElement.value, tagsContainer);
+                    }
+                    selectElement.value = '';
+                    populateCategoryDropdowns(getElement('category-select-anesthesia'), getElement('category-tags-anesthesia'), getElement('category-select-intensive'), getElement('category-tags-intensive'));
+                    populateCategoryDropdowns(getElement('edit-category-select-anesthesia'), getElement('edit-category-tags-anesthesia'), getElement('edit-category-select-intensive'), getElement('edit-category-tags-intensive'));
+                }
+            }
+
+            getElement('category-select-anesthesia').addEventListener('change', function() { handleCategorySelect(this, getElement('category-tags-anesthesia'), false); });
+            getElement('category-select-intensive').addEventListener('change', function() { handleCategorySelect(this, getElement('category-tags-intensive'), false); });
+            
+            document.body.addEventListener('click', function(e) {
+                if (e.target.classList.contains('category-tag-remove-btn')) {
+                    const tag = e.target.parentElement;
+                    const id = tag.dataset.id;
+                    const isParent = [...document.querySelectorAll('.category-tag')].some(t => getItemById(t.dataset.id)?.parent === id);
+                    if (isParent) { showCustomMessage("Fehler", "Oberkategorie kann nicht entfernt werden, solange Unterkategorien ausgewählt sind."); return; }
+                    if (id === "anaesthesieverfahren_gesamt" && [...document.querySelectorAll('#category-tags-anesthesia .category-tag, #edit-category-tags-anesthesia .category-tag')].some(t => t.dataset.id !== id)) { showCustomMessage("Fehler", "'Durchführung von Anästhesieverfahren' kann nicht entfernt werden, solange andere Anästhesie-Kategorien ausgewählt sind."); return; }
+                    tag.remove();
+                    populateCategoryDropdowns(getElement('category-select-anesthesia'), getElement('category-tags-anesthesia'), getElement('category-select-intensive'), getElement('category-tags-intensive'));
+                    populateCategoryDropdowns(getElement('edit-category-select-anesthesia'), getElement('edit-category-tags-anesthesia'), getElement('edit-category-select-intensive'), getElement('edit-category-tags-intensive'));
+                }
+                 if (e.target.closest('.details-btn') || e.target.closest('.tile-details-btn')) {
+                    const itemId = e.target.closest('[data-item-id]').dataset.itemId;
+                    showPatientModal(itemId);
+                }
+            });
+        
+            getElement('add-patient-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formErrorsDisplay = getElement('form-errors');
+                formErrorsDisplay.innerHTML = '';
+                formErrorsDisplay.classList.add('hidden');
+                let errors = [];
+                if (!currentCaseType) errors.push("Bitte Art des Falls wählen.");
+                const patientData = { id: crypto.randomUUID(), caseId: getElement('caseId').value.trim(), diagnosis: getElement('diagnosis').value.trim(), comments: getElement('comments').value.trim(), caseType: currentCaseType };
+                if (currentCaseType === 'anesthesia') {
+                    Object.assign(patientData, { dateOfAnesthesia: getElement('dateOfAnesthesia').value, dob: getElement('dob').value, operation: getElement('operation').value.trim() });
+                    if (!patientData.dateOfAnesthesia) errors.push("'Datum der Narkose' ist ein Pflichtfeld.");
+                    if (!patientData.operation) errors.push("'Operation' ist ein Pflichtfeld bei Narkosen.");
+                } else if (currentCaseType === 'intensive') {
+                    Object.assign(patientData, { treatmentStartDate: getElement('treatmentStartDate').value, treatmentEndDate: getElement('treatmentEndDate').value });
+                    if (!patientData.treatmentStartDate || !patientData.treatmentEndDate) errors.push("Behandlungsbeginn und -ende sind Pflichtfelder.");
+                }
+                patientData.categories = (currentCaseType === 'anesthesia') ? [...document.querySelectorAll('#category-tags-anesthesia .category-tag')].map(t => t.dataset.id) : [...document.querySelectorAll('#category-tags-intensive .category-tag')].map(t => t.dataset.id);
+                if (patientData.categories.length === 0) errors.push("Bitte mindestens eine Kategorie auswählen.");
+                
+                if (tempRegionalDetails) {
+                    patientData.regionalAnaesthesiaDetails = tempRegionalDetails;
+                }
+
+                if (errors.length > 0) { formErrorsDisplay.innerHTML = `<ul>${errors.map(err => `<li>${err}</li>`).join('')}</ul>`; formErrorsDisplay.classList.remove('hidden'); return; }
+                patients.push(patientData);
+                saveData();
+                resetForm();
+                showCustomMessage("Erfolg", "Fall gespeichert.");
+            });
+
+            // --- Logik zum Bearbeiten von Fällen ---
+            getElement('patient-modal').addEventListener('click', e => {
+                if (e.target.classList.contains('edit-case-btn')) {
+                    openEditCaseModal(e.target.dataset.caseId);
+                }
+            });
+
+            getElement('edit-category-select-anesthesia').addEventListener('change', function() { handleCategorySelect(this, getElement('edit-category-tags-anesthesia'), true); });
+            getElement('edit-category-select-intensive').addEventListener('change', function() { handleCategorySelect(this, getElement('edit-category-tags-intensive'), true); });
+
+            getElement('edit-case-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const caseIndex = patients.findIndex(p => p.id === currentEditingCaseId);
+                if (caseIndex === -1) return;
+
+                const originalCase = patients[caseIndex];
+                const updatedCase = { ...originalCase };
+
+                updatedCase.caseId = getElement('edit-caseId').value.trim();
+                updatedCase.diagnosis = getElement('edit-diagnosis').value.trim();
+                updatedCase.comments = getElement('edit-comments').value.trim();
+                
+                if (originalCase.caseType === 'anesthesia') {
+                    updatedCase.dateOfAnesthesia = getElement('edit-dateOfAnesthesia').value;
+                    updatedCase.dob = getElement('edit-dob').value;
+                    updatedCase.operation = getElement('edit-operation').value.trim();
+                    updatedCase.categories = [...getElement('edit-category-tags-anesthesia').querySelectorAll('.category-tag')].map(t => t.dataset.id);
+                } else {
+                    updatedCase.treatmentStartDate = getElement('edit-treatmentStartDate').value;
+                    updatedCase.treatmentEndDate = getElement('edit-treatmentEndDate').value;
+                    updatedCase.categories = [...getElement('edit-category-tags-intensive').querySelectorAll('.category-tag')].map(t => t.dataset.id);
+                }
+
+                // Hier Logik für tempRegionalDetails im Edit-Modus hinzufügen, falls erforderlich
+                if (tempRegionalDetails) {
+                    updatedCase.regionalAnaesthesiaDetails = tempRegionalDetails;
+                    tempRegionalDetails = null;
+                }
+
+                patients[caseIndex] = updatedCase;
+                saveData();
+                closeModal(getElement('edit-case-modal'));
+                showPatientModal(lastOpenedItemId); 
+                showCustomMessage("Erfolg", "Fall erfolgreich aktualisiert.");
+            });
+
+
+            getElement('edit-user-info-btn').addEventListener('click', () => openModal(getElement('user-info-modal')));
+            getElement('user-info-form').addEventListener('submit', (e) => { e.preventDefault(); userInfo = {...userInfo, doctorName:getElement('doctorName').value, doctorDob:getElement('doctorDob').value, clinic:getElement('clinic').value, supervisor:getElement('supervisor').value}; saveData(); closeModal(getElement('user-info-modal')); });
+            
+            document.body.addEventListener('click', e => { 
+                if (e.target.closest('.edit-offset-btn')) { 
+                    currentOffsetItemId = e.target.closest('.edit-offset-btn').dataset.id; 
+                    getElement('offset-modal-title').textContent = `Fallzahl bearbeiten`; 
+                    getElement('offset-category-name').textContent = `Manueller Wert für "${getItemById(currentOffsetItemId)?.name || ''}":`; 
+                    getElement('offset-input').value = manualOffsets[currentOffsetItemId] || 0; 
+                    openModal(getElement('offset-edit-modal')); 
+                } 
+            });
+            
+            getElement('offset-edit-form').addEventListener('submit', (e) => { 
+                e.preventDefault(); 
+                const val = parseInt(getElement('offset-input').value, 10); 
+                if (!isNaN(val)) { 
+                    manualOffsets[currentOffsetItemId] = val; 
+                    saveData();
+                    closeModal(getElement('offset-edit-modal')); 
+                }
+            });
+
+            getElement('export-logbook-btn').addEventListener('click', exportLogbookAsCSV);
+            getElement('export-data-btn').addEventListener('click', () => { const dataStr = JSON.stringify({ userInfo, patients, manualOffsets }, null, 2); const blob = new Blob([dataStr], {type: "application/json"}); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `ai-logbuch-backup_${new Date().toISOString().slice(0, 10)}.json`; link.click(); URL.revokeObjectURL(link.href); });
+            getElement('import-data-btn').addEventListener('click', () => getElement('import-file-input').click());
+            getElement('import-file-input').addEventListener('change', (e) => { if (!e.target.files[0]) return; const reader = new FileReader(); reader.onload = (ev) => { try { const data = JSON.parse(ev.target.result); if (data.userInfo && data.patients) { userInfo=data.userInfo; patients=data.patients; manualOffsets=data.manualOffsets||{}; saveData(); showCustomMessage("Import erfolgreich", "Daten importiert."); } else { showCustomMessage("Fehler", "Ungültiges Format."); }} catch { showCustomMessage("Fehler", "Datei konnte nicht gelesen werden."); }}; reader.readAsText(e.target.files[0]); e.target.value = ''; });
+            getElement('reset-button').addEventListener('click', () => { showCustomMessage("Daten zurücksetzen?", "Alle Fälle und Korrekturen werden gelöscht.", 'confirm', (ok) => { if(ok) { patients=[]; manualOffsets={}; saveData(); }}); });
+            ['user-info-modal', 'patient-modal', 'offset-edit-modal', 'custom-message-modal', 'edit-case-modal', 'regional-anaesthesia-modal'].forEach(id => { const modal = getElement(id); modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); }); modal.querySelector('button[id$="-close-btn"]').addEventListener('click', () => closeModal(modal)); });
+            
+            getElement('save-regional-anaesthesia-btn').addEventListener('click', () => {
+                const prefix = regionalAnaesthesiaContext.formPrefix;
+                const tagsContainer = getElement(`${prefix}category-tags-anesthesia`);
+                
+                const details = {};
+                let blockSelected = false;
+                peripheralBlocks.forEach(block => {
+                    const blockCheckbox = getElement(`${block.id}-checkbox`);
+                    if (blockCheckbox && blockCheckbox.checked) {
+                        blockSelected = true;
+                        const katheterCheckbox = getElement(`${block.id}-katheter-checkbox`);
+                        details[block.id] = katheterCheckbox ? katheterCheckbox.checked : false;
+                    }
+                });
+
+                if(blockSelected) {
+                    tempRegionalDetails = details;
+                    addCategoryTag('regional_peripher', tagsContainer);
+                }
+                
+                closeModal(getElement('regional-anaesthesia-modal'));
+                populateCategoryDropdowns(getElement('category-select-anesthesia'), getElement('category-tags-anesthesia'), getElement('category-select-intensive'), getElement('category-tags-intensive'));
+                populateCategoryDropdowns(getElement('edit-category-select-anesthesia'), getElement('edit-category-tags-anesthesia'), getElement('edit-category-select-intensive'), getElement('edit-category-tags-intensive'));
+            });
+
+            getElement('wbo-procedure-list').addEventListener('click', e => {
+                const header = e.target.closest('.collapsible-header, .collapsible-header-sub');
+                if (!header) return;
+            
+                const id = header.closest('[data-cat-id]')?.dataset.catId || header.dataset.id;
+                collapsibleStates[id] = !header.classList.contains('open');
+            
+                header.classList.toggle('open');
+                const isMainHeader = header.classList.contains('collapsible-header');
+                const content = isMainHeader
+                    ? header.nextElementSibling
+                    : header.closest('.item-container').querySelector('.collapsible-content');
+            
+                if (content) {
+                    if (header.classList.contains('open')) {
+                        content.style.maxHeight = content.scrollHeight + "px";
+                    } else {
+                        content.style.maxHeight = null;
+                    }
+                }
+            
+                if (!isMainHeader) {
+                    const mainContent = header.closest('.card > .collapsible-content');
+                    if (mainContent && mainContent.style.maxHeight) { 
+                        setTimeout(() => {
+                            mainContent.style.maxHeight = mainContent.scrollHeight + "px";
+                        }, 300);
+                    }
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
