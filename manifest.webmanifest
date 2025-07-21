@@ -8,12 +8,12 @@
   "description": "Logbuch für die Facharztweiterbildung.",
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/marv-md/ailogbuch/main/Logbuch_192.png",
+      "src": "https://raw.githubusercontent.com/marv-md/ailogbuch/main/Logbuch.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://raw.githubusercontent.com/marv-md/ailogbuch/main/Logbuch_512.png",
+      "src": "https://raw.githubusercontent.com/marv-md/ailogbuch/main/Logbuch.png",
       "sizes": "512x512",
       "type": "image/png"
     }
