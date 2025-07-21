@@ -1,0 +1,21 @@
+{
+  "name": "A&I-Logbuch",
+  "short_name": "A&I-Logbuch",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#4f46e5",
+  "description": "Logbuch für die Facharztweiterbildung.",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/marv-md/ailogbuch/main/Logbuch_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/marv-md/ailogbuch/main/Logbuch_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
