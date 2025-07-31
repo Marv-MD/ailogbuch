@@ -285,7 +285,7 @@
                     </div>
                     <div id="edit-anesthesia-fields" class="space-y-4">
                         <div><label for="edit-dateOfAnesthesia" class="text-sm font-medium text-gray-700">Datum der Narkose</label><input type="date" id="edit-dateOfAnesthesia" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
-                        <div><label for="edit-dob" class="text-sm font-medium text-gray-700">Geburtsdatum Patient/in (optional)</label><input type="date" id="edit-dob" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                        <div><label for="dob" class="text-sm font-medium text-gray-700">Geburtsdatum Patient/in (optional)</label><input type="date" id="edit-dob" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
                         <div><label for="edit-operation" class="text-sm font-medium text-gray-700">Operation</label><input type="text" id="edit-operation" class="mt-1 p-2 border rounded-md w-full"></div>
                     </div>
                     <div id="edit-intensive-fields" class="space-y-4">
@@ -852,21 +852,31 @@
         }
 
         function exportLogbookAsCSV() {
-            const headers = ["Fall-Typ", "Datum", "Fall-ID", "Diagnose", "Operation", "Kommentar", "Zugeordnete Kategorien"];
-            const rows = patients.map(p => {
-                const date = p.caseType === 'anesthesia' ? (p.dateOfAnesthesia || '') : `${p.treatmentStartDate || ''} bis ${p.treatmentEndDate || ''}`;
-                const categories = (p.categories || []).map(id => `"${getItemById(id)?.name || id}"`).join('; ');
-                const escape = (str) => `"${(str || '').replace(/"/g, '""')}"`;
-                return [
-                    escape(p.caseType === 'anesthesia' ? 'Narkose' : 'Intensiv'),
-                    escape(date),
-                    escape(p.caseId),
-                    escape(p.diagnosis),
-                    escape(p.operation),
-                    escape(p.comments),
-                    escape(categories)
-                ].join(',');
+            const headers = ["Kategorie", "Prozedur", "Erfasst (Fälle)", "Manuell", "Gesamt", "Soll"];
+            const rows = [];
+
+            categoriesData.forEach(cat => {
+                if(cat.type === 'wbo' || cat.type === 'other') {
+                    cat.items.forEach(item => {
+                        const patientCount = patients.filter(p => p.categories.includes(item.id)).length;
+                        const manualOffset = manualOffsets[item.id] || 0;
+                        const totalCount = patientCount + manualOffset;
+                        const target = item.target !== undefined ? item.target : 'N/A';
+                        
+                        const escape = (str) => `"${(str || '').toString().replace(/"/g, '""')}"`;
+                        
+                        rows.push([
+                            escape(cat.displayCategory),
+                            escape(item.name),
+                            patientCount,
+                            manualOffset,
+                            totalCount,
+                            target
+                        ].join(','));
+                    });
+                }
             });
+
             const csvContent = "data:text/csv;charset=utf-8," + [headers.join(',')].concat(rows).join('\r\n');
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
@@ -943,7 +953,9 @@
                     getElement('user-email-display').textContent = user.email;
                     
                     unsubscribe = onSnapshot(doc(db, "users", currentUserId), (docSnap) => {
-                        saveCollapsibleStates();
+                        if (!isInitialLoad) {
+                            saveCollapsibleStates();
+                        }
                         const defaultUserInfo = { doctorName: '', doctorDob: '', clinic: '', supervisor: '', trainingStartDate: '', trainingPeriods: [], externalPeriods: [] };
                         if (docSnap.exists()) {
                             const data = docSnap.data();
@@ -1244,7 +1256,9 @@
                 if (!header) return;
             
                 const id = header.closest('[data-cat-id]')?.dataset.catId || header.dataset.id;
-                collapsibleStates[id] = !header.classList.contains('open');
+                if(id) {
+                    collapsibleStates[id] = !header.classList.contains('open');
+                }
             
                 header.classList.toggle('open');
                 const isMainHeader = header.classList.contains('collapsible-header');
@@ -1265,7 +1279,7 @@
                     if (mainContent && mainContent.style.maxHeight) { 
                         setTimeout(() => {
                             mainContent.style.maxHeight = mainContent.scrollHeight + "px";
-                        }, 300);
+                        }, 500); // Wait for sub-content transition to finish
                     }
                 }
             });
