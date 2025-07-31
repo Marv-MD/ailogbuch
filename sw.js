@@ -1,13 +1,13 @@
 // sw.js - Service Worker für Offline-Fähigkeit
 
 // Name des Caches. Ändern Sie diesen Namen, wenn Sie die App-Dateien aktualisieren.
-const CACHE_NAME = 'ai-logbuch-cache-v3';
+const CACHE_NAME = 'ai-logbuch-cache-v4';
 
 // Eine Liste der Dateien, die für den Offline-Betrieb unerlässlich sind.
 const urlsToCache = [
   './', // Das Haupt-HTML-Dokument
   './manifest.webmanifest',
-  './Logbuch.png', // Das Logo hinzugefügt
+  './Logbuch-Icon_neu.png', // Das Logo hinzugefügt
   'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
   'https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js',
