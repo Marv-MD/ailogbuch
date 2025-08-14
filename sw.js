@@ -7,7 +7,7 @@ const CACHE_NAME = 'ai-logbuch-cache-v5';
 const urlsToCache = [
   './', // Das Haupt-HTML-Dokument
   './manifest.webmanifest',
-  './Logbuch-Icon_neu.png', // Das Logo hinzugefügt
+  './Logbuch-Icon_2025-08-14.png', // Das Logo hinzugefügt
   'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
   'https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js',
