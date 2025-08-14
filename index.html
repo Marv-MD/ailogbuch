@@ -15,7 +15,7 @@
         .progress-bar-bg { background-color: #e0e0e0; }
         .progress-bar-fill { background-color: #4ade80; transition: width 0.5s ease-in-out; }
         .card { background-color: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
-        #patient-modal, #user-info-modal, #offset-edit-modal, #custom-message-modal, #edit-case-modal, #regional-anaesthesia-modal { transition: opacity 0.3s ease; }
+        #patient-modal, #user-info-modal, #offset-edit-modal, #custom-message-modal, #edit-case-modal, #regional-anaesthesia-modal, #input-modal { transition: opacity 0.3s ease; }
         .modal-content { transition: transform 0.3s ease; }
         .category-tag-remove-btn { margin-left: 0.5rem; background: none; border: none; cursor: pointer; font-weight: bold; opacity: 0.7; }
         .category-tag-remove-btn:hover { opacity: 1; }
@@ -36,14 +36,14 @@
         .edit-offset-btn svg { width: 1.25em; height: 1.25em; }
         #loading-overlay, #auth-container { z-index: 9999; }
         input[type="date"]::placeholder { color: #9ca3af; }
-        .case-type-btn.active {
-            background-color: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-        }
-        .case-type-btn.active:hover {
-            background-color: #1d4ed8;
-        }
+        
+        .case-type-btn.active-anesthesia { background-color: #14b8a6; color: white; border-color: #0f766e; } /* teal-500 */
+        .case-type-btn.active-anesthesia:hover { background-color: #0d9488; } /* teal-600 */
+        .case-type-btn.active-intensive { background-color: #f59e0b; color: white; border-color: #b45309; } /* amber-500 */
+        .case-type-btn.active-intensive:hover { background-color: #d97706; } /* amber-600 */
+        .case-type-btn.active-emergency { background-color: #ef4444; color: white; border-color: #b91c1c; } /* red-500 */
+        .case-type-btn.active-emergency:hover { background-color: #dc2626; } /* red-600 */
+
         .collapsible-content {
             max-height: 0;
             overflow: hidden;
@@ -60,6 +60,19 @@
         }
         .icon-btn:hover { color: #1f2937; }
         .icon-btn svg { width: 1.25rem; height: 1.25rem; }
+        .station-tag {
+            cursor: pointer;
+            background-color: #e5e7eb;
+            color: #374151;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .station-tag:hover {
+            background-color: #d1d5db;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -146,13 +159,13 @@
                     </div>
                     <div class="border-t pt-4">
                         <h3 class="font-semibold text-lg text-gray-800 mb-2">Weiterbildungsabschnitte (A&I)</h3>
-                        <div id="training-periods-container" class="space-y-4"></div>
-                        <button type="button" id="add-training-period-btn" class="mt-4 px-4 py-2 bg-blue-100 text-blue-800 text-sm font-semibold rounded-md hover:bg-blue-200">+ Abschnitt hinzufügen</button>
+                        <div id="training-institutions-container" class="space-y-4"></div>
+                        <button type="button" id="add-institution-btn" class="mt-4 px-4 py-2 bg-blue-100 text-blue-800 text-sm font-semibold rounded-md hover:bg-blue-200">+ Weiterbildungsstätte hinzufügen</button>
                     </div>
                     <div class="border-t pt-4">
                         <h3 class="font-semibold text-lg text-gray-800 mb-2">Weiterbildung außerhalb der Anästhesie</h3>
-                        <div id="external-periods-container" class="space-y-4"></div>
-                        <button type="button" id="add-external-period-btn" class="mt-4 px-4 py-2 bg-blue-100 text-blue-800 text-sm font-semibold rounded-md hover:bg-blue-200">+ Externen Abschnitt hinzufügen</button>
+                        <div id="external-institutions-container" class="space-y-4"></div>
+                        <button type="button" id="add-external-institution-btn" class="mt-4 px-4 py-2 bg-blue-100 text-blue-800 text-sm font-semibold rounded-md hover:bg-blue-200">+ Externe Stätte hinzufügen</button>
                     </div>
                     <div class="border-t pt-4 mt-4">
                         <h3 class="font-semibold text-lg text-gray-800">Prognose</h3>
@@ -176,9 +189,10 @@
                 </div>
                 <div>
                     <label class="text-sm font-medium text-gray-700 block mb-2">Art des Falls</label>
-                    <div class="flex gap-2">
+                    <div class="flex flex-wrap gap-2">
                         <button type="button" id="case-type-anesthesia" class="case-type-btn flex-1 py-2 px-4 border border-gray-300 rounded-md font-semibold text-gray-700 hover:bg-gray-100">Narkose</button>
-                        <button type="button" id="case-type-intensive" class="case-type-btn flex-1 py-2 px-4 border border-gray-300 rounded-md font-semibold text-gray-700 hover:bg-gray-100">Intensivbehandlung</button>
+                        <button type="button" id="case-type-intensive" class="case-type-btn flex-1 py-2 px-4 border border-gray-300 rounded-md font-semibold text-gray-700 hover:bg-gray-100">Intensiv</button>
+                        <button type="button" id="case-type-emergency" class="case-type-btn flex-1 py-2 px-4 border border-gray-300 rounded-md font-semibold text-gray-700 hover:bg-gray-100">Notfalleinsatz</button>
                     </div>
                 </div>
                 <div id="shared-fields" class="space-y-4 hidden">
@@ -193,6 +207,24 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div><label for="treatmentStartDate" class="text-sm font-medium text-gray-700">Behandlungsbeginn</label><input type="date" id="treatmentStartDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
                         <div><label for="treatmentEndDate" class="text-sm font-medium text-gray-700">Behandlungsende</label><input type="date" id="treatmentEndDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                    </div>
+                </div>
+                 <div id="emergency-fields" class="space-y-4 hidden">
+                    <div><label for="emergencyDate" class="text-sm font-medium text-gray-700">Datum</label><input type="date" id="emergencyDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                    <div><label for="emergencyMessage" class="text-sm font-medium text-gray-700">Meldung</label><input type="text" id="emergencyMessage" class="mt-1 p-2 border rounded-md w-full"></div>
+                    <div>
+                        <label for="emergencyStation" class="text-sm font-medium text-gray-700">Wache</label>
+                        <input type="text" id="emergencyStation" class="mt-1 p-2 border rounded-md w-full">
+                        <div id="emergency-station-tags" class="mt-2 flex flex-wrap gap-2"></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label for="emergencyPatientDob" class="text-sm font-medium text-gray-700">Geburtsdatum Pat. (optional)</label><input type="date" id="emergencyPatientDob" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                        <div><label for="emergencyPatientName" class="text-sm font-medium text-gray-700">Name/Initialen Pat. (optional)</label><input type="text" id="emergencyPatientName" class="mt-1 p-2 border rounded-md w-full"></div>
+                    </div>
+                    <div><label for="emergencySuspectedDiagnosis" class="text-sm font-medium text-gray-700">Verdachtsdiagnose</label><input type="text" id="emergencySuspectedDiagnosis" class="mt-1 p-2 border rounded-md w-full"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label for="emergencySpecialty" class="text-sm font-medium text-gray-700">Fachrichtung</label><select id="emergencySpecialty" class="w-full mt-1 p-2 border rounded-md bg-white custom-select"></select></div>
+                        <div><label for="emergencyCare" class="text-sm font-medium text-gray-700">Versorgung</label><select id="emergencyCare" class="w-full mt-1 p-2 border rounded-md bg-white custom-select"></select></div>
                     </div>
                 </div>
                 <div id="common-fields-after" class="space-y-4 hidden">
@@ -221,16 +253,14 @@
         </div>
 
         <div id="wbo-procedure-list" class="space-y-6 mb-8"></div>
-        <div id="other-procedure-tiles" class="card p-4 md:p-6 mb-8 hidden">
-            <h2 class="text-2xl font-bold mb-4 text-gray-700">Intensivmedizinische Fälle</h2>
-            <div id="other-tiles-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
-        </div>
+        <div id="other-procedure-tiles" class="mb-8"></div>
+        <div id="emergency-mission-summary" class="card mb-8 hidden"></div>
 
         <footer class="text-center mt-12 text-sm text-gray-500">
              <div class="card p-4 md:p-6 mb-8">
                 <h3 class="text-xl font-bold text-gray-700 mb-4">Datenverwaltung</h3>
                 <div class="flex flex-col md:flex-row justify-center items-center gap-4">
-                    <button id="export-logbook-btn" class="w-full md:w-auto bg-teal-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-600">Logbuch exportieren (CSV)</button>
+                    <button id="export-logbook-btn" class="w-full md:w-auto bg-green-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-800">Logbuch exportieren (CSV)</button>
                     <button id="export-data-btn" class="w-full md:w-auto bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">Backup exportieren</button>
                     <button id="import-data-btn" class="w-full md:w-auto bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600">Backup importieren</button>
                     <input type="file" id="import-file-input" class="hidden" accept=".json">
@@ -332,6 +362,25 @@
         </div>
     </div>
 
+    <!-- Input Modal -->
+    <div id="input-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0 z-50">
+        <div class="modal-content bg-white rounded-lg shadow-xl max-w-sm w-full transform scale-95">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 id="input-modal-title" class="text-xl font-bold"></h3>
+                <button id="input-modal-close-btn" class="text-2xl font-bold">&times;</button>
+            </div>
+            <div class="p-6">
+                <form id="input-modal-form">
+                    <label id="input-modal-label" for="input-modal-field" class="text-sm font-medium text-gray-700"></label>
+                    <input type="text" id="input-modal-field" class="mt-1 p-2 border rounded-md w-full" required>
+                    <div class="pt-4 mt-4 border-t flex justify-end">
+                        <button type="submit" class="bg-blue-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600">Speichern</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
@@ -355,7 +404,7 @@
         let patients = [];
         let userInfo = {
             doctorName: '', doctorDob: '', clinic: '', supervisor: '',
-            trainingStartDate: '', trainingPeriods: [], externalPeriods: []
+            trainingStartDate: '', trainingInstitutions: [], externalPeriods: [], emergencyStations: []
         };
         let manualOffsets = {};
         let currentUserId = null;
@@ -386,6 +435,9 @@
             { id: 'nfb', name: 'NFB' }, { id: 'nib', name: 'NIB' }, { id: 'nsb', name: 'NSB' }
         ];
 
+        const emergencySpecialties = ["Innere", "Chirurgie", "Neurologie", "Gynäkologie", "Urologie", "Pädiatrie", "Psychiatrie"];
+        const emergencyCareTypes = ["Transport mit NA", "Transport ohne NA", "Versorgung vor Ort", "Fehleinsatz/Leerfahrt"];
+
         // --- Hilfsfunktionen ---
         const getElement = id => document.getElementById(id);
         const getItemById = (id) => allItems.find(item => item.id === id);
@@ -411,13 +463,34 @@
             openModal(modal);
         }
 
+        let onInputConfirm = null; // Callback für das Input-Modal
+
+        function showInputModal(title, label, callback) {
+            const modal = getElement('input-modal');
+            getElement('input-modal-title').textContent = title;
+            getElement('input-modal-label').textContent = label;
+            getElement('input-modal-field').value = '';
+            onInputConfirm = callback;
+            openModal(modal);
+        }
+
         // --- Kernlogik der Anwendung ---
         async function saveData() {
             if (!currentUserId) return;
             try {
                 const userInfoToSave = JSON.parse(JSON.stringify(userInfo));
-                (userInfoToSave.trainingPeriods || []).forEach(p => { delete p.isEditing; delete p.isNew; });
-                (userInfoToSave.externalPeriods || []).forEach(p => { delete p.isEditing; delete p.isNew; });
+                (userInfoToSave.trainingInstitutions || []).forEach(inst => {
+                    (inst.periods || []).forEach(p => {
+                        delete p.isEditing;
+                        delete p.isNew;
+                    });
+                });
+                (userInfoToSave.externalPeriods || []).forEach(inst => {
+                    (inst.periods || []).forEach(p => {
+                        delete p.isEditing;
+                        delete p.isNew;
+                    });
+                });
 
                 await setDoc(doc(db, "users", currentUserId), { userInfo: userInfoToSave, patients, manualOffsets });
             } catch (e) { console.error("Error writing document: ", e); showCustomMessage("Fehler", "Fehler beim Speichern der Daten."); }
@@ -458,25 +531,53 @@
         function renderTrainingHistory() {
             getElement('training-start-date').value = userInfo.trainingStartDate || '';
             
-            const periodsContainer = getElement('training-periods-container');
-            periodsContainer.innerHTML = '';
-            (userInfo.trainingPeriods || []).forEach((period, index) => {
-                periodsContainer.appendChild(createPeriodElement(period, index, 'training'));
+            const institutionsContainer = getElement('training-institutions-container');
+            institutionsContainer.innerHTML = '';
+            (userInfo.trainingInstitutions || []).forEach((inst, instIndex) => {
+                institutionsContainer.appendChild(createInstitutionElement(inst, instIndex, 'training'));
             });
 
-            const externalContainer = getElement('external-periods-container');
+            const externalContainer = getElement('external-institutions-container');
             externalContainer.innerHTML = '';
-            (userInfo.externalPeriods || []).forEach((period, index) => {
-                externalContainer.appendChild(createPeriodElement(period, index, 'external'));
+            (userInfo.externalPeriods || []).forEach((inst, instIndex) => {
+                externalContainer.appendChild(createInstitutionElement(inst, instIndex, 'external'));
             });
 
             setTimeout(updateCollapsibleHeight, 50);
         }
 
-        function createPeriodElement(period, index, type) {
+        function createInstitutionElement(inst, instIndex, type) {
             const div = document.createElement('div');
-            div.className = 'training-period-item p-3 border rounded-md';
-            div.dataset.index = index;
+            div.className = 'institution-group border p-4 rounded-lg';
+            div.dataset.institutionIndex = instIndex;
+            div.dataset.type = type;
+
+            div.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-md font-semibold text-gray-800">${inst.name || 'Neue Weiterbildungsstätte'}</h4>
+                    <div class="flex items-center gap-2">
+                         <button type="button" class="add-training-period-btn text-sm text-blue-600 hover:underline" data-institution-index="${instIndex}">+ Abschnitt hinzufügen</button>
+                         <button type="button" class="remove-institution-btn icon-btn text-red-500" title="Weiterbildungsstätte löschen">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="pointer-events-none" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                         </button>
+                    </div>
+                </div>
+                <div class="periods-container space-y-3"></div>
+            `;
+
+            const periodsContainer = div.querySelector('.periods-container');
+            (inst.periods || []).forEach((period, periodIndex) => {
+                periodsContainer.appendChild(createPeriodElement(period, instIndex, periodIndex, type));
+            });
+
+            return div;
+        }
+
+
+        function createPeriodElement(period, instIndex, periodIndex, type) {
+            const div = document.createElement('div');
+            div.className = 'training-period-item p-3 border rounded-md bg-gray-50';
+            div.dataset.periodIndex = periodIndex;
             div.dataset.type = type;
 
             if (period.isEditing) {
@@ -498,7 +599,6 @@
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm flex-grow">
                         <div><strong class="block text-xs text-gray-500">Zeitraum:</strong> ${fDate(period.start)} - ${fDate(period.end)}</div>
                         <div><strong class="block text-xs text-gray-500">Anteil:</strong> ${period.anteil || 100}%</div>
-                        <div><strong class="block text-xs text-gray-500">Klinikum:</strong> ${period.klinikum || 'N/A'}</div>
                         <div><strong class="block text-xs text-gray-500">Abteilung:</strong> ${period.abteilung || 'N/A'}</div>
                         <div><strong class="block text-xs text-gray-500">Bevollmächtigte(r):</strong> ${period.supervisor || 'N/A'}</div>
                         ${externalFields}
@@ -519,7 +619,7 @@
             const externalInputs = type === 'external'
                 ? `<div><label class="text-xs text-gray-500">Anrechenbare Monate</label><input type="number" value="${period.anrechenbar || 0}" class="p-2 border rounded-md w-full" data-field="anrechenbar" step="0.1" min="0"></div>`
                 : '';
-            const gridCols = type === 'external' ? 'md:grid-cols-4' : 'md:grid-cols-3';
+            const gridCols = type === 'external' ? 'md:grid-cols-3' : 'md:grid-cols-2';
 
             return `
                 <div class="space-y-2">
@@ -529,8 +629,7 @@
                         <div><label class="text-xs text-gray-500">Anteil (%)</label><input type="number" value="${period.anteil || 100}" class="p-2 border rounded-md w-full" data-field="anteil" min="1" max="100"></div>
                         ${externalInputs}
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                        <div><label class="text-xs text-gray-500">Klinikum</label><input type="text" value="${period.klinikum || ''}" class="p-2 border rounded-md w-full" data-field="klinikum"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div><label class="text-xs text-gray-500">Abteilung</label><input type="text" value="${period.abteilung || ''}" class="p-2 border rounded-md w-full" data-field="abteilung"></div>
                         <div><label class="text-xs text-gray-500">Bevollmächtigte(r)</label><input type="text" value="${period.supervisor || ''}" class="p-2 border rounded-md w-full" data-field="supervisor"></div>
                     </div>
@@ -546,19 +645,31 @@
         function calculatePrognosis() {
             let completedMonths = 0;
             const today = new Date();
-            (userInfo.trainingPeriods || []).forEach(p => {
-                if(p.start) {
-                    const startDate = new Date(p.start);
-                    const endDate = p.end ? new Date(p.end) : today;
-                    if(startDate < endDate) {
-                        const diffTime = Math.abs(endDate - startDate);
-                        const diffDays = (diffTime / (1000 * 60 * 60 * 24)) + 1;
-                        completedMonths += (diffDays / 30.4375) * ((p.anteil || 100) / 100);
+            
+            const calculateMonthsFromPeriods = (periods) => {
+                let months = 0;
+                (periods || []).forEach(p => {
+                    if(p.start) {
+                        const startDate = new Date(p.start);
+                        const endDate = p.end ? new Date(p.end) : today;
+                        if(startDate < endDate) {
+                            const diffTime = Math.abs(endDate - startDate);
+                            const diffDays = (diffTime / (1000 * 60 * 60 * 24)) + 1;
+                            months += (diffDays / 30.4375) * ((p.anteil || 100) / 100);
+                        }
                     }
-                }
+                });
+                return months;
+            };
+
+            (userInfo.trainingInstitutions || []).forEach(inst => {
+                completedMonths += calculateMonthsFromPeriods(inst.periods);
             });
-            (userInfo.externalPeriods || []).forEach(p => {
-                completedMonths += parseFloat(p.anrechenbar) || 0;
+
+            (userInfo.externalPeriods || []).forEach(inst => {
+                 (inst.periods || []).forEach(p => {
+                    completedMonths += parseFloat(p.anrechenbar) || 0;
+                });
             });
             
             const totalRequiredMonths = 60;
@@ -619,12 +730,12 @@
         function renderProcedureListsAndTiles() {
             const listContainer = getElement('wbo-procedure-list');
             listContainer.innerHTML = '';
-            getElement('other-tiles-container').innerHTML = '';
+            getElement('emergency-mission-summary').innerHTML = '';
             
             categoriesData.filter(cat => cat.type === "wbo").forEach(cat => {
                 const catDiv = document.createElement('div');
                 catDiv.className = 'card mb-4 overflow-hidden';
-                catDiv.dataset.catId = cat.id; // ID für Zustandsspeicherung
+                catDiv.dataset.catId = cat.id;
         
                 const header = document.createElement('div');
                 header.className = 'collapsible-header flex justify-between items-center cursor-pointer p-4 md:p-6';
@@ -672,15 +783,98 @@
                 regionalPeripherContainer.appendChild(detailsContainer);
             }
 
-            const otherContainer = getElement('other-tiles-container');
-            otherContainer.innerHTML = categoriesData.filter(c => c.type === 'other').flatMap(c => c.items).map(item => `<div class="card p-4 text-center ${item.colorClass || 'bg-gray-100'}"><h4 class="text-lg font-semibold">${item.name}</h4><p id="tile-count-${item.id}" class="text-3xl font-bold mt-2">0</p><span id="tile-manual-offset-${item.id}" class="text-xs flex items-center justify-center mt-1">Manuell: 0 <button class="edit-offset-btn ml-1" data-id="${item.id}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" /><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" /></svg></button></span><button class="tile-details-btn mt-2 px-3 py-1 bg-gray-200 text-sm font-semibold rounded-md hover:bg-gray-300" data-item-id="${item.id}">Details</button></div>`).join('');
-            getElement('other-procedure-tiles').classList.toggle('hidden', otherContainer.innerHTML === '');
+            const emergencyMissions = patients.filter(p => p.caseType === 'emergency');
+            const emergencySummary = getElement('emergency-mission-summary');
+            if (emergencyMissions.length > 0) {
+                emergencySummary.classList.remove('hidden');
+                emergencySummary.classList.add('card', 'mb-8', 'overflow-hidden');
+                emergencySummary.dataset.catId = 'emergency-summary';
+
+                let tableRows = emergencyMissions
+                    .sort((a,b) => new Date(b.date) - new Date(a.date))
+                    .map(p => {
+                        const fDate = (date) => date ? new Date(date+'T00:00:00').toLocaleDateString('de-DE') : 'N/A';
+                        return `
+                            <tr class="border-b">
+                                <td class="px-4 py-2 text-sm">${fDate(p.date)}</td>
+                                <td class="px-4 py-2 text-sm">${p.message || ''}</td>
+                                <td class="px-4 py-2 text-sm">${p.station || ''}</td>
+                                <td class="px-4 py-2 text-sm">${p.suspectedDiagnosis || ''}</td>
+                                <td class="px-4 py-2 text-sm">${p.specialty || ''}</td>
+                                <td class="px-4 py-2 text-sm">${p.care || ''}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                emergencySummary.innerHTML = `
+                    <div class="collapsible-header flex justify-between items-center cursor-pointer p-4 md:p-6">
+                        <h2 class="text-2xl font-bold text-gray-700">Notfalleinsätze (<span id="emergency-total-count">0</span>)</h2>
+                        <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="p-4 md:p-6 pt-4 border-t border-gray-200 overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">Datum</th>
+                                        <th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">Meldung</th>
+                                        <th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">Wache</th>
+                                        <th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">Verdachtsdiagnose</th>
+                                        <th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">Fachrichtung</th>
+                                        <th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">Versorgung</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${tableRows}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            } else {
+                 emergencySummary.classList.add('hidden');
+            }
+
+            const otherItems = categoriesData.filter(c => c.type === 'other').flatMap(c => c.items);
+            const otherCasesCard = getElement('other-procedure-tiles');
+            otherCasesCard.innerHTML = ''; // Clear previous content
+
+            if (otherItems.length > 0) {
+                otherCasesCard.className = 'card mb-8 overflow-hidden'; // Set classes
+                otherCasesCard.dataset.catId = 'other-cases-summary';
+
+                const tilesHTML = otherItems.map(item => 
+                    `<div class="card p-4 text-center ${item.colorClass || 'bg-gray-100'}">
+                        <h4 class="text-lg font-semibold">${item.name}</h4>
+                        <p id="tile-count-${item.id}" class="text-3xl font-bold mt-2">0</p>
+                        <span id="tile-manual-offset-${item.id}" class="text-xs flex items-center justify-center mt-1">
+                            Manuell: 0 
+                            <button class="edit-offset-btn ml-1" data-id="${item.id}">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" /><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" /></svg>
+                            </button>
+                        </span>
+                        <button class="tile-details-btn mt-2 px-3 py-1 bg-gray-200 text-sm font-semibold rounded-md hover:bg-gray-300" data-item-id="${item.id}">Details</button>
+                    </div>`
+                ).join('');
+
+                otherCasesCard.innerHTML = `
+                    <div class="collapsible-header flex justify-between items-center cursor-pointer p-4 md:p-6">
+                        <h2 class="text-2xl font-bold text-gray-700">Intensivmedizinische Fälle</h2>
+                        <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div class="collapsible-content">
+                        <div id="other-tiles-container" class="p-4 md:p-6 pt-4 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            ${tilesHTML}
+                        </div>
+                    </div>
+                `;
+            } else {
+                 otherCasesCard.className = 'hidden'; // Hide if no items
+            }
         }
 
         function updateAllCounts() {
             let totalWboCurrent = 0, totalWboTarget = 0;
             allItems.forEach(item => {
-                const patientCount = patients.filter(p => p.categories.includes(item.id)).length;
+                const patientCount = patients.filter(p => p.categories && p.categories.includes(item.id)).length;
                 const manualOffset = manualOffsets[item.id] || 0;
                 const totalCount = patientCount + manualOffset;
                 if (item.target !== undefined) {
@@ -694,7 +888,10 @@
                 } else {
                     const tileCountEl = getElement(`tile-count-${item.id}`);
                     if(tileCountEl) tileCountEl.textContent = totalCount;
-                    getElement(`tile-manual-offset-${item.id}`).innerHTML = `Manuell: ${manualOffset}<button class="edit-offset-btn ml-1" data-id="${item.id}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" /><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" /></svg></button>`;
+                    const tileManualOffsetEl = getElement(`tile-manual-offset-${item.id}`);
+                    if (tileManualOffsetEl) {
+                        tileManualOffsetEl.innerHTML = `Manuell: ${manualOffset}<button class="edit-offset-btn ml-1" data-id="${item.id}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" /><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" /></svg></button>`;
+                    }
                 }
             });
             const percentage = totalWboTarget > 0 ? (totalWboCurrent / totalWboTarget) * 100 : 0;
@@ -726,17 +923,58 @@
                     countEl.textContent = `${peripheralCounts[blockId].total} (davon ${peripheralCounts[blockId].catheter} mit Katheter)`;
                 }
             }
+
+            // Zählung für Notfalleinsätze
+            const emergencyMissions = patients.filter(p => p.caseType === 'emergency');
+            const totalEmergency = getElement('emergency-total-count');
+            if(totalEmergency) totalEmergency.textContent = emergencyMissions.length;
+
+            emergencySpecialties.forEach(s => {
+                const count = emergencyMissions.filter(p => p.specialty === s).length;
+                const el = getElement(`emergency-count-specialty-${s.toLowerCase()}`);
+                if(el) el.textContent = count;
+            });
+            emergencyCareTypes.forEach(c => {
+                const count = emergencyMissions.filter(p => p.care === c).length;
+                const el = getElement(`emergency-count-care-${c.toLowerCase().replace(/\s/g, '-')}`);
+                if(el) el.textContent = count;
+            });
         }
 
         function setCaseType(type) {
             currentCaseType = type;
-            ['anesthesia', 'intensive'].forEach(t => getElement(`case-type-${t}`).classList.toggle('active', t === type));
-            getElement('shared-fields').classList.toggle('hidden', type === null);
+            ['anesthesia', 'intensive', 'emergency'].forEach(t => {
+                getElement(`case-type-${t}`).classList.remove('active-anesthesia', 'active-intensive', 'active-emergency');
+            });
+            if (type) {
+                getElement(`case-type-${type}`).classList.add(`active-${type}`);
+            }
+
+            const caseIdInput = getElement('caseId');
+            const caseIdLabel = document.querySelector('label[for="caseId"]');
+
+            getElement('shared-fields').classList.toggle('hidden', type !== 'anesthesia' && type !== 'intensive');
             getElement('common-fields-after').classList.toggle('hidden', type === null);
             getElement('anesthesia-fields').classList.toggle('hidden', type !== 'anesthesia');
             getElement('intensive-fields').classList.toggle('hidden', type !== 'intensive');
+            getElement('emergency-fields').classList.toggle('hidden', type !== 'emergency');
             getElement('category-selection-anesthesia').classList.toggle('hidden', type !== 'anesthesia');
             getElement('category-selection-intensive').classList.toggle('hidden', type !== 'intensive');
+
+            if(type === 'emergency') {
+                caseIdLabel.textContent = 'Einsatznr. (optional)';
+                caseIdInput.disabled = false;
+                caseIdInput.required = false;
+                caseIdInput.value = '';
+                caseIdInput.classList.remove('bg-gray-100');
+                renderEmergencyStationTags();
+            } else {
+                caseIdLabel.textContent = 'Fall-ID (z.B. aus SAP)';
+                caseIdInput.disabled = false;
+                caseIdInput.required = true;
+                caseIdInput.classList.remove('bg-gray-100');
+            }
+
             if(type === null) {
                 getElement('category-tags-anesthesia').innerHTML = '';
                 getElement('category-tags-intensive').innerHTML = '';
@@ -783,6 +1021,9 @@
             getElement('add-patient-form').reset(); 
             setCaseType(null); 
             tempRegionalDetails = null; 
+            getElement('category-tags-anesthesia').innerHTML = '';
+            getElement('category-tags-intensive').innerHTML = '';
+            populateCategoryDropdowns(getElement('category-select-anesthesia'), getElement('category-tags-anesthesia'), getElement('category-select-intensive'), getElement('category-tags-intensive'));
         };
 
         function showPatientModal(itemId) {
@@ -790,7 +1031,7 @@
             const item = getItemById(itemId);
             getElement('modal-title').textContent = `Details für: ${item.name}`;
             const body = getElement('modal-body');
-            const patientList = patients.filter(p => p.categories.includes(itemId));
+            const patientList = patients.filter(p => p.categories && p.categories.includes(itemId));
             
             if (patientList.length === 0) { 
                 body.innerHTML = '<p class="text-gray-600">Keine Fälle für diese Kategorie erfasst.</p>'; 
@@ -858,7 +1099,7 @@
             categoriesData.forEach(cat => {
                 if(cat.type === 'wbo' || cat.type === 'other') {
                     cat.items.forEach(item => {
-                        const patientCount = patients.filter(p => p.categories.includes(item.id)).length;
+                        const patientCount = patients.filter(p => p.categories && p.categories.includes(item.id)).length;
                         const manualOffset = manualOffsets[item.id] || 0;
                         const totalCount = patientCount + manualOffset;
                         const target = item.target !== undefined ? item.target : 'N/A';
@@ -876,6 +1117,22 @@
                     });
                 }
             });
+
+            // Notfalleinsätze hinzufügen
+            const emergencyMissions = patients.filter(p => p.caseType === 'emergency');
+            if (emergencyMissions.length > 0) {
+                rows.push([]); // Leerzeile
+                rows.push(["Notfalleinsätze", "", "", "", emergencyMissions.length, ""]);
+                emergencySpecialties.forEach(s => {
+                    const count = emergencyMissions.filter(p => p.specialty === s).length;
+                    rows.push(["Fachrichtung", s, count, 0, count, ""]);
+                });
+                emergencyCareTypes.forEach(c => {
+                    const count = emergencyMissions.filter(p => p.care === c).length;
+                    rows.push(["Versorgung", c, count, 0, count, ""]);
+                });
+            }
+
 
             const csvContent = "data:text/csv;charset=utf-8," + [headers.join(',')].concat(rows).join('\r\n');
             const encodedUri = encodeURI(csvContent);
@@ -929,6 +1186,21 @@
             }
         }
 
+        function renderEmergencyStationTags() {
+            const container = getElement('emergency-station-tags');
+            container.innerHTML = '';
+            (userInfo.emergencyStations || []).forEach(station => {
+                const tag = document.createElement('button');
+                tag.type = 'button';
+                tag.className = 'station-tag';
+                tag.textContent = station;
+                tag.onclick = () => {
+                    getElement('emergencyStation').value = station;
+                };
+                container.appendChild(tag);
+            });
+        }
+
         // --- Event Listener ---
         document.addEventListener('DOMContentLoaded', () => {
              // Service Worker Registrierung
@@ -953,15 +1225,29 @@
                     getElement('user-email-display').textContent = user.email;
                     
                     unsubscribe = onSnapshot(doc(db, "users", currentUserId), (docSnap) => {
-                        if (!isInitialLoad) {
-                            saveCollapsibleStates();
-                        }
-                        const defaultUserInfo = { doctorName: '', doctorDob: '', clinic: '', supervisor: '', trainingStartDate: '', trainingPeriods: [], externalPeriods: [] };
+                        saveCollapsibleStates();
+                        const defaultUserInfo = { doctorName: '', doctorDob: '', clinic: '', supervisor: '', trainingStartDate: '', trainingInstitutions: [], externalPeriods: [], emergencyStations: [] };
                         if (docSnap.exists()) {
                             const data = docSnap.data();
                             patients = data.patients || [];
                             userInfo = { ...defaultUserInfo, ...(data.userInfo || {}) };
                             manualOffsets = data.manualOffsets || {};
+                            
+                            // --- MIGRATION LOGIC for old externalPeriods structure ---
+                            if (userInfo.externalPeriods && userInfo.externalPeriods.length > 0 && userInfo.externalPeriods[0].hasOwnProperty('start')) {
+                                console.log("Migrating old externalPeriods structure...");
+                                const groupedPeriods = userInfo.externalPeriods.reduce((acc, period) => {
+                                    const key = period.klinikum || 'Unbekannte Stätte';
+                                    if (!acc[key]) {
+                                        acc[key] = { name: key, periods: [] };
+                                    }
+                                    delete period.klinikum;
+                                    acc[key].periods.push(period);
+                                    return acc;
+                                }, {});
+                                userInfo.externalPeriods = Object.values(groupedPeriods);
+                            }
+
                         } else {
                             patients = []; 
                             userInfo = defaultUserInfo;
@@ -973,7 +1259,7 @@
                             renderAll();
                             isInitialLoad = false;
                         } else {
-                            updateAllCounts();
+                            renderAll();
                         }
 
                         restoreCollapsibleStates();
@@ -992,7 +1278,7 @@
                     currentUserId = null;
                     if (typeof unsubscribe === 'function') unsubscribe();
                     patients = []; 
-                    userInfo = { doctorName: '', doctorDob: '', clinic: '', supervisor: '', trainingStartDate: '', trainingPeriods: [], externalPeriods: [] };
+                    userInfo = { doctorName: '', doctorDob: '', clinic: '', supervisor: '', trainingStartDate: '', trainingInstitutions: [], externalPeriods: [], emergencyStations: [] };
                     manualOffsets = {};
                     authContainer.classList.remove('hidden');
                     appContainer.classList.add('hidden');
@@ -1010,80 +1296,102 @@
                 getElement('toggle-auth-mode').textContent = getElement('login-form').classList.contains('hidden') ? 'Bereits einen Account? Hier anmelden.' : 'Noch kein Account? Hier registrieren.';
             });
 
-            getElement('training-history-header').addEventListener('click', () => {
-                const header = getElement('training-history-header');
-                const content = getElement('training-history-content');
-                header.classList.toggle('open');
-                content.style.maxHeight = header.classList.contains('open') ? content.scrollHeight + "px" : null;
-            });
-            
             getElement('training-start-date').addEventListener('change', () => { 
                 userInfo.trainingStartDate = getElement('training-start-date').value;
                 saveData(); 
             });
 
-            function handlePeriodAction(e) {
+            getElement('training-history-content').addEventListener('click', e => {
                 const target = e.target.closest('button');
                 if (!target) return;
-                
-                const itemDiv = target.closest('.training-period-item');
-                if (!itemDiv) return;
 
-                const index = parseInt(itemDiv.dataset.index, 10);
-                const type = itemDiv.dataset.type;
-                const periodArray = type === 'training' ? userInfo.trainingPeriods : userInfo.externalPeriods;
-                
-                if (target.classList.contains('edit-period-btn')) {
-                    periodArray.forEach(p => delete p.isEditing); 
-                    periodArray[index].isEditing = true;
-                    renderTrainingHistory();
-                } else if (target.classList.contains('cancel-period-btn')) {
-                    if (periodArray[index].isNew) {
-                         periodArray.splice(index, 1);
-                    } else {
-                        delete periodArray[index].isEditing;
-                    }
-                    renderTrainingHistory();
-                } else if (target.classList.contains('remove-period-btn')) {
-                    showCustomMessage('Abschnitt löschen', 'Möchten Sie diesen Abschnitt wirklich endgültig löschen?', 'confirm', (confirmed) => {
+                const instGroup = e.target.closest('.institution-group');
+                if (!instGroup) return;
+
+                const type = instGroup.dataset.type;
+                const dataArray = type === 'training' ? userInfo.trainingInstitutions : userInfo.externalPeriods;
+                const instIndex = parseInt(instGroup.dataset.institutionIndex, 10);
+                const institution = dataArray[instIndex];
+
+                if (target.classList.contains('remove-institution-btn')) {
+                    showCustomMessage('Stätte löschen', `Möchten Sie "${institution.name}" und alle zugehörigen Abschnitte wirklich löschen?`, 'confirm', (confirmed) => {
                         if (confirmed) {
-                            periodArray.splice(index, 1);
+                            dataArray.splice(instIndex, 1);
                             saveData();
                         }
                     });
+                    return;
+                }
+
+                if (target.classList.contains('add-training-period-btn')) {
+                    if (!institution.periods) institution.periods = [];
+                    const newPeriod = { start: '', end: '', anteil: 100, abteilung: '', supervisor: '', isEditing: true, isNew: true };
+                    if (type === 'external') newPeriod.anrechenbar = 0;
+                    institution.periods.unshift(newPeriod);
+                    renderTrainingHistory();
+                    return;
+                }
+
+                const periodItem = e.target.closest('.training-period-item');
+                if (!periodItem) return;
+                const periodIndex = parseInt(periodItem.dataset.periodIndex, 10);
+                const period = institution.periods[periodIndex];
+
+                if (target.classList.contains('edit-period-btn')) {
+                    period.isEditing = true;
+                } else if (target.classList.contains('cancel-period-btn')) {
+                    if (period.isNew) {
+                        institution.periods.splice(periodIndex, 1);
+                    } else {
+                        delete period.isEditing;
+                    }
+                } else if (target.classList.contains('remove-period-btn')) {
+                    showCustomMessage('Abschnitt löschen', 'Möchten Sie diesen Abschnitt wirklich endgültig löschen?', 'confirm', (confirmed) => {
+                        if (confirmed) {
+                            institution.periods.splice(periodIndex, 1);
+                            saveData();
+                        }
+                    });
+                    return;
                 } else if (target.classList.contains('save-period-btn')) {
                     const newPeriodData = {
-                        start: itemDiv.querySelector('[data-field="start"]').value,
-                        end: itemDiv.querySelector('[data-field="end"]').value,
-                        anteil: itemDiv.querySelector('[data-field="anteil"]').value,
-                        klinikum: itemDiv.querySelector('[data-field="klinikum"]').value,
-                        abteilung: itemDiv.querySelector('[data-field="abteilung"]').value,
-                        supervisor: itemDiv.querySelector('[data-field="supervisor"]').value,
+                        start: periodItem.querySelector('[data-field="start"]').value,
+                        end: periodItem.querySelector('[data-field="end"]').value,
+                        anteil: periodItem.querySelector('[data-field="anteil"]').value,
+                        abteilung: periodItem.querySelector('[data-field="abteilung"]').value,
+                        supervisor: periodItem.querySelector('[data-field="supervisor"]').value,
                     };
                     if (type === 'external') {
-                        newPeriodData.anrechenbar = itemDiv.querySelector('[data-field="anrechenbar"]').value;
+                        newPeriodData.anrechenbar = periodItem.querySelector('[data-field="anrechenbar"]').value;
                     }
-                    delete periodArray[index].isEditing;
-                    delete periodArray[index].isNew; 
-                    periodArray[index] = { ...periodArray[index], ...newPeriodData };
+                    delete period.isEditing;
+                    delete period.isNew;
+                    institution.periods[periodIndex] = { ...period, ...newPeriodData };
                     saveData();
+                    return;
                 }
-            }
-
-            getElement('training-periods-container').addEventListener('click', handlePeriodAction);
-            getElement('external-periods-container').addEventListener('click', handlePeriodAction);
-            
-            getElement('add-training-period-btn').addEventListener('click', () => { 
-                userInfo.trainingPeriods.push({ start: '', end: '', anteil: 100, klinikum: '', abteilung: '', supervisor: '', isEditing: true, isNew: true });
                 renderTrainingHistory();
             });
-            getElement('add-external-period-btn').addEventListener('click', () => { 
-                userInfo.externalPeriods.push({ start: '', end: '', anteil: 100, anrechenbar: 0, klinikum: '', abteilung: '', supervisor: '', isEditing: true, isNew: true });
-                renderTrainingHistory();
+            
+            getElement('add-institution-btn').addEventListener('click', () => {
+                showInputModal("Neue Weiterbildungsstätte", "Name der Stätte (z.B. Klinikum):", (newName) => {
+                    if (!userInfo.trainingInstitutions) userInfo.trainingInstitutions = [];
+                    userInfo.trainingInstitutions.push({ name: newName, periods: [] });
+                    saveData();
+                });
+            });
+
+            getElement('add-external-institution-btn').addEventListener('click', () => {
+                showInputModal("Neue externe Stätte", "Name der Stätte (z.B. Praxis, anderes Klinikum):", (newName) => {
+                    if (!userInfo.externalPeriods) userInfo.externalPeriods = [];
+                    userInfo.externalPeriods.push({ name: newName, periods: [] });
+                    saveData();
+                });
             });
             
             getElement('case-type-anesthesia').addEventListener('click', () => setCaseType('anesthesia'));
             getElement('case-type-intensive').addEventListener('click', () => setCaseType('intensive'));
+            getElement('case-type-emergency').addEventListener('click', () => setCaseType('emergency'));
             
             function handleCategorySelect(selectElement, tagsContainer, isEdit) {
                 const prefix = isEdit ? 'edit-' : '';
@@ -1126,20 +1434,52 @@
                 formErrorsDisplay.classList.add('hidden');
                 let errors = [];
                 if (!currentCaseType) errors.push("Bitte Art des Falls wählen.");
-                const patientData = { id: crypto.randomUUID(), caseId: getElement('caseId').value.trim(), diagnosis: getElement('diagnosis').value.trim(), comments: getElement('comments').value.trim(), caseType: currentCaseType };
+                
+                const patientData = { 
+                    id: crypto.randomUUID(), 
+                    caseType: currentCaseType, 
+                    comments: getElement('comments').value.trim(),
+                    categories: [] // Initialize categories for all cases
+                };
+
+                if (currentCaseType === 'anesthesia' || currentCaseType === 'intensive') {
+                    patientData.caseId = getElement('caseId').value.trim();
+                    patientData.diagnosis = getElement('diagnosis').value.trim();
+                }
+
                 if (currentCaseType === 'anesthesia') {
                     Object.assign(patientData, { dateOfAnesthesia: getElement('dateOfAnesthesia').value, dob: getElement('dob').value, operation: getElement('operation').value.trim() });
                     if (!patientData.dateOfAnesthesia) errors.push("'Datum der Narkose' ist ein Pflichtfeld.");
                     if (!patientData.operation) errors.push("'Operation' ist ein Pflichtfeld bei Narkosen.");
+                    patientData.categories = [...document.querySelectorAll('#category-tags-anesthesia .category-tag')].map(t => t.dataset.id);
+                    if (patientData.categories.length === 0) errors.push("Bitte mindestens eine Kategorie auswählen.");
+                    if (tempRegionalDetails) {
+                        patientData.regionalAnaesthesiaDetails = tempRegionalDetails;
+                    }
                 } else if (currentCaseType === 'intensive') {
                     Object.assign(patientData, { treatmentStartDate: getElement('treatmentStartDate').value, treatmentEndDate: getElement('treatmentEndDate').value });
                     if (!patientData.treatmentStartDate || !patientData.treatmentEndDate) errors.push("Behandlungsbeginn und -ende sind Pflichtfelder.");
-                }
-                patientData.categories = (currentCaseType === 'anesthesia') ? [...document.querySelectorAll('#category-tags-anesthesia .category-tag')].map(t => t.dataset.id) : [...document.querySelectorAll('#category-tags-intensive .category-tag')].map(t => t.dataset.id);
-                if (patientData.categories.length === 0) errors.push("Bitte mindestens eine Kategorie auswählen.");
-                
-                if (tempRegionalDetails) {
-                    patientData.regionalAnaesthesiaDetails = tempRegionalDetails;
+                    patientData.categories = [...document.querySelectorAll('#category-tags-intensive .category-tag')].map(t => t.dataset.id);
+                    if (patientData.categories.length === 0) errors.push("Bitte mindestens eine Kategorie auswählen.");
+                } else if (currentCaseType === 'emergency') {
+                    const station = getElement('emergencyStation').value.trim();
+                    Object.assign(patientData, {
+                        caseId: getElement('caseId').value.trim(),
+                        date: getElement('emergencyDate').value,
+                        message: getElement('emergencyMessage').value.trim(),
+                        station: station,
+                        patientDob: getElement('emergencyPatientDob').value,
+                        patientName: getElement('emergencyPatientName').value.trim(),
+                        suspectedDiagnosis: getElement('emergencySuspectedDiagnosis').value.trim(),
+                        specialty: getElement('emergencySpecialty').value,
+                        care: getElement('emergencyCare').value
+                    });
+                    if (!patientData.date) errors.push("'Datum' ist ein Pflichtfeld.");
+                    if (!patientData.message) errors.push("'Meldung' ist ein Pflichtfeld.");
+                    if (!patientData.suspectedDiagnosis) errors.push("'Verdachtsdiagnose' ist ein Pflichtfeld.");
+                    if (station && !userInfo.emergencyStations.includes(station)) {
+                        userInfo.emergencyStations.push(station);
+                    }
                 }
 
                 if (errors.length > 0) { formErrorsDisplay.innerHTML = `<ul>${errors.map(err => `<li>${err}</li>`).join('')}</ul>`; formErrorsDisplay.classList.remove('hidden'); return; }
@@ -1224,7 +1564,7 @@
             getElement('import-data-btn').addEventListener('click', () => getElement('import-file-input').click());
             getElement('import-file-input').addEventListener('change', (e) => { if (!e.target.files[0]) return; const reader = new FileReader(); reader.onload = (ev) => { try { const data = JSON.parse(ev.target.result); if (data.userInfo && data.patients) { userInfo=data.userInfo; patients=data.patients; manualOffsets=data.manualOffsets||{}; saveData(); showCustomMessage("Import erfolgreich", "Daten importiert."); } else { showCustomMessage("Fehler", "Ungültiges Format."); }} catch { showCustomMessage("Fehler", "Datei konnte nicht gelesen werden."); }}; reader.readAsText(e.target.files[0]); e.target.value = ''; });
             getElement('reset-button').addEventListener('click', () => { showCustomMessage("Daten zurücksetzen?", "Alle Fälle und Korrekturen werden gelöscht.", 'confirm', (ok) => { if(ok) { patients=[]; manualOffsets={}; saveData(); }}); });
-            ['user-info-modal', 'patient-modal', 'offset-edit-modal', 'custom-message-modal', 'edit-case-modal', 'regional-anaesthesia-modal'].forEach(id => { const modal = getElement(id); modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); }); modal.querySelector('button[id$="-close-btn"]').addEventListener('click', () => closeModal(modal)); });
+            ['user-info-modal', 'patient-modal', 'offset-edit-modal', 'custom-message-modal', 'edit-case-modal', 'regional-anaesthesia-modal', 'input-modal'].forEach(id => { const modal = getElement(id); modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); }); modal.querySelector('button[id$="-close-btn"]').addEventListener('click', () => closeModal(modal)); });
             
             getElement('save-regional-anaesthesia-btn').addEventListener('click', () => {
                 const prefix = regionalAnaesthesiaContext.formPrefix;
@@ -1251,7 +1591,7 @@
                 populateCategoryDropdowns(getElement('edit-category-select-anesthesia'), getElement('edit-category-tags-anesthesia'), getElement('edit-category-select-intensive'), getElement('edit-category-tags-intensive'));
             });
 
-            getElement('wbo-procedure-list').addEventListener('click', e => {
+            getElement('app-container').addEventListener('click', e => {
                 const header = e.target.closest('.collapsible-header, .collapsible-header-sub');
                 if (!header) return;
             
@@ -1283,6 +1623,22 @@
                     }
                 }
             });
+
+            getElement('input-modal-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const value = getElement('input-modal-field').value.trim();
+                if (value && onInputConfirm) {
+                    onInputConfirm(value);
+                }
+                closeModal(getElement('input-modal'));
+            });
+
+            // Dropdowns für Notfalleinsätze füllen
+            const specialtySelect = getElement('emergencySpecialty');
+            emergencySpecialties.forEach(s => specialtySelect.innerHTML += `<option>${s}</option>`);
+            const careSelect = getElement('emergencyCare');
+            emergencyCareTypes.forEach(c => careSelect.innerHTML += `<option>${c}</option>`);
+
         });
 
     </script>
