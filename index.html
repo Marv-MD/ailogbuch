@@ -315,13 +315,30 @@
                     </div>
                     <div id="edit-anesthesia-fields" class="space-y-4">
                         <div><label for="edit-dateOfAnesthesia" class="text-sm font-medium text-gray-700">Datum der Narkose</label><input type="date" id="edit-dateOfAnesthesia" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
-                        <div><label for="dob" class="text-sm font-medium text-gray-700">Geburtsdatum Patient/in (optional)</label><input type="date" id="edit-dob" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                        <div><label for="edit-dob" class="text-sm font-medium text-gray-700">Geburtsdatum Patient/in (optional)</label><input type="date" id="edit-dob" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
                         <div><label for="edit-operation" class="text-sm font-medium text-gray-700">Operation</label><input type="text" id="edit-operation" class="mt-1 p-2 border rounded-md w-full"></div>
                     </div>
                     <div id="edit-intensive-fields" class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div><label for="edit-treatmentStartDate" class="text-sm font-medium text-gray-700">Behandlungsbeginn</label><input type="date" id="edit-treatmentStartDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
                             <div><label for="edit-treatmentEndDate" class="text-sm font-medium text-gray-700">Behandlungsende</label><input type="date" id="edit-treatmentEndDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                        </div>
+                    </div>
+                     <div id="edit-emergency-fields" class="space-y-4 hidden">
+                        <div><label for="edit-emergencyDate" class="text-sm font-medium text-gray-700">Datum</label><input type="date" id="edit-emergencyDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                        <div><label for="edit-emergencyMessage" class="text-sm font-medium text-gray-700">Meldung</label><input type="text" id="edit-emergencyMessage" class="mt-1 p-2 border rounded-md w-full"></div>
+                        <div>
+                            <label for="edit-emergencyStation" class="text-sm font-medium text-gray-700">Wache</label>
+                            <input type="text" id="edit-emergencyStation" class="mt-1 p-2 border rounded-md w-full">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label for="edit-emergencyPatientDob" class="text-sm font-medium text-gray-700">Geburtsdatum Pat. (optional)</label><input type="date" id="edit-emergencyPatientDob" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                            <div><label for="edit-emergencyPatientName" class="text-sm font-medium text-gray-700">Name/Initialen Pat. (optional)</label><input type="text" id="edit-emergencyPatientName" class="mt-1 p-2 border rounded-md w-full"></div>
+                        </div>
+                        <div><label for="edit-emergencySuspectedDiagnosis" class="text-sm font-medium text-gray-700">Verdachtsdiagnose</label><input type="text" id="edit-emergencySuspectedDiagnosis" class="mt-1 p-2 border rounded-md w-full"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label for="edit-emergencySpecialty" class="text-sm font-medium text-gray-700">Fachrichtung</label><select id="edit-emergencySpecialty" class="w-full mt-1 p-2 border rounded-md bg-white custom-select"></select></div>
+                            <div><label for="edit-emergencyCare" class="text-sm font-medium text-gray-700">Versorgung</label><select id="edit-emergencyCare" class="w-full mt-1 p-2 border rounded-md bg-white custom-select"></select></div>
                         </div>
                     </div>
                     
@@ -802,6 +819,8 @@
                                 <td class="px-4 py-2 text-sm">${p.suspectedDiagnosis || ''}</td>
                                 <td class="px-4 py-2 text-sm">${p.specialty || ''}</td>
                                 <td class="px-4 py-2 text-sm">${p.care || ''}</td>
+                                <td class="px-4 py-2 text-sm">${p.comments || ''}</td>
+                                <td class="px-4 py-2 text-sm"><button class="edit-case-btn text-indigo-600 hover:text-indigo-900 font-semibold" data-case-id="${p.id}">Bearbeiten</button></td>
                             </tr>
                         `;
                     }).join('');
@@ -822,6 +841,8 @@
                                         <th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">Verdachtsdiagnose</th>
                                         <th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">Fachrichtung</th>
                                         <th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">Versorgung</th>
+                                        <th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">Kommentar</th>
+                                        <th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">Aktion</th>
                                     </tr>
                                 </thead>
                                 <tbody>${tableRows}</tbody>
@@ -1049,28 +1070,48 @@
             const modal = getElement('edit-case-modal');
             const anaesthesiaFields = modal.querySelector('#edit-anesthesia-fields');
             const intensiveFields = modal.querySelector('#edit-intensive-fields');
+            const emergencyFields = modal.querySelector('#edit-emergency-fields');
             const anaesthesiaCatSelection = modal.querySelector('#edit-category-selection-anesthesia');
             const intensiveCatSelection = modal.querySelector('#edit-category-selection-intensive');
 
             modal.querySelector('#edit-caseId').value = caseToEdit.caseId;
-            modal.querySelector('#edit-diagnosis').value = caseToEdit.diagnosis || '';
             modal.querySelector('#edit-comments').value = caseToEdit.comments || '';
             
+            anaesthesiaFields.classList.add('hidden');
+            intensiveFields.classList.add('hidden');
+            emergencyFields.classList.add('hidden');
+            anaesthesiaCatSelection.classList.add('hidden');
+            intensiveCatSelection.classList.add('hidden');
+
             if (caseToEdit.caseType === 'anesthesia') {
                 anaesthesiaFields.classList.remove('hidden');
-                intensiveFields.classList.add('hidden');
                 anaesthesiaCatSelection.classList.remove('hidden');
-                intensiveCatSelection.classList.add('hidden');
+                modal.querySelector('#edit-caseId').previousElementSibling.textContent = 'Fall-ID (z.B. aus SAP)';
+                modal.querySelector('#edit-shared-fields').classList.remove('hidden');
+                modal.querySelector('#edit-diagnosis').value = caseToEdit.diagnosis || '';
                 modal.querySelector('#edit-dateOfAnesthesia').value = caseToEdit.dateOfAnesthesia;
                 modal.querySelector('#edit-dob').value = caseToEdit.dob;
                 modal.querySelector('#edit-operation').value = caseToEdit.operation;
-            } else {
-                anaesthesiaFields.classList.add('hidden');
+            } else if (caseToEdit.caseType === 'intensive') {
                 intensiveFields.classList.remove('hidden');
-                anaesthesiaCatSelection.classList.add('hidden');
                 intensiveCatSelection.classList.remove('hidden');
+                modal.querySelector('#edit-caseId').previousElementSibling.textContent = 'Fall-ID (z.B. aus SAP)';
+                modal.querySelector('#edit-shared-fields').classList.remove('hidden');
+                modal.querySelector('#edit-diagnosis').value = caseToEdit.diagnosis || '';
                 modal.querySelector('#edit-treatmentStartDate').value = caseToEdit.treatmentStartDate;
                 modal.querySelector('#edit-treatmentEndDate').value = caseToEdit.treatmentEndDate;
+            } else if (caseToEdit.caseType === 'emergency') {
+                emergencyFields.classList.remove('hidden');
+                modal.querySelector('#edit-caseId').previousElementSibling.textContent = 'Einsatznr. (optional)';
+                modal.querySelector('#edit-shared-fields').classList.add('hidden');
+                modal.querySelector('#edit-emergencyDate').value = caseToEdit.date;
+                modal.querySelector('#edit-emergencyMessage').value = caseToEdit.message;
+                modal.querySelector('#edit-emergencyStation').value = caseToEdit.station;
+                modal.querySelector('#edit-emergencyPatientDob').value = caseToEdit.patientDob;
+                modal.querySelector('#edit-emergencyPatientName').value = caseToEdit.patientName;
+                modal.querySelector('#edit-emergencySuspectedDiagnosis').value = caseToEdit.suspectedDiagnosis;
+                modal.querySelector('#edit-emergencySpecialty').value = caseToEdit.specialty;
+                modal.querySelector('#edit-emergencyCare').value = caseToEdit.care;
             }
             
             const anaesthesiaTagsContainer = getElement('edit-category-tags-anesthesia');
@@ -1078,14 +1119,16 @@
             anaesthesiaTagsContainer.innerHTML = '';
             intensiveTagsContainer.innerHTML = '';
 
-            caseToEdit.categories.forEach(catId => {
-                const itemGroup = categoriesData.find(cat => cat.items.some(i => i.id === catId));
-                if (itemGroup.id.includes('intensive') || itemGroup.id.includes('emergency')) {
-                     addCategoryTag(catId, intensiveTagsContainer, true);
-                } else {
-                     addCategoryTag(catId, anaesthesiaTagsContainer, true);
-                }
-            });
+            if (caseToEdit.categories) {
+                caseToEdit.categories.forEach(catId => {
+                    const itemGroup = categoriesData.find(cat => cat.items.some(i => i.id === catId));
+                    if (itemGroup && (itemGroup.id.includes('intensive') || itemGroup.id.includes('emergency'))) {
+                         addCategoryTag(catId, intensiveTagsContainer, true);
+                    } else if (itemGroup) {
+                         addCategoryTag(catId, anaesthesiaTagsContainer, true);
+                    }
+                });
+            }
             
             populateCategoryDropdowns(getElement('edit-category-select-anesthesia'), anaesthesiaTagsContainer, getElement('edit-category-select-intensive'), intensiveTagsContainer);
 
@@ -1200,6 +1243,13 @@
                 container.appendChild(tag);
             });
         }
+        
+        function populateEmergencyDropdowns(specialtySelect, careSelect) {
+            specialtySelect.innerHTML = '';
+            emergencySpecialties.forEach(s => specialtySelect.innerHTML += `<option>${s}</option>`);
+            careSelect.innerHTML = '';
+            emergencyCareTypes.forEach(c => careSelect.innerHTML += `<option>${c}</option>`);
+        }
 
         // --- Event Listener ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -1213,6 +1263,9 @@
                     });
                 });
             }
+            
+            populateEmergencyDropdowns(getElement('emergencySpecialty'), getElement('emergencyCare'));
+            populateEmergencyDropdowns(getElement('edit-emergencySpecialty'), getElement('edit-emergencyCare'));
 
             onAuthStateChanged(auth, user => {
                 const loadingOverlay = getElement('loading-overlay');
@@ -1425,6 +1478,9 @@
                     const itemId = e.target.closest('[data-item-id]').dataset.itemId;
                     showPatientModal(itemId);
                 }
+                if (e.target.classList.contains('edit-case-btn')) {
+                    openEditCaseModal(e.target.dataset.caseId);
+                }
             });
         
             getElement('add-patient-form').addEventListener('submit', function(e) {
@@ -1489,16 +1545,6 @@
                 showCustomMessage("Erfolg", "Fall gespeichert.");
             });
 
-            // --- Logik zum Bearbeiten von Fällen ---
-            getElement('patient-modal').addEventListener('click', e => {
-                if (e.target.classList.contains('edit-case-btn')) {
-                    openEditCaseModal(e.target.dataset.caseId);
-                }
-            });
-
-            getElement('edit-category-select-anesthesia').addEventListener('change', function() { handleCategorySelect(this, getElement('edit-category-tags-anesthesia'), true); });
-            getElement('edit-category-select-intensive').addEventListener('change', function() { handleCategorySelect(this, getElement('edit-category-tags-intensive'), true); });
-
             getElement('edit-case-form').addEventListener('submit', function(e) {
                 e.preventDefault();
                 const caseIndex = patients.findIndex(p => p.id === currentEditingCaseId);
@@ -1508,21 +1554,36 @@
                 const updatedCase = { ...originalCase };
 
                 updatedCase.caseId = getElement('edit-caseId').value.trim();
-                updatedCase.diagnosis = getElement('edit-diagnosis').value.trim();
                 updatedCase.comments = getElement('edit-comments').value.trim();
                 
                 if (originalCase.caseType === 'anesthesia') {
+                    updatedCase.diagnosis = getElement('edit-diagnosis').value.trim();
                     updatedCase.dateOfAnesthesia = getElement('edit-dateOfAnesthesia').value;
                     updatedCase.dob = getElement('edit-dob').value;
                     updatedCase.operation = getElement('edit-operation').value.trim();
                     updatedCase.categories = [...getElement('edit-category-tags-anesthesia').querySelectorAll('.category-tag')].map(t => t.dataset.id);
-                } else {
+                } else if (originalCase.caseType === 'intensive') {
+                    updatedCase.diagnosis = getElement('edit-diagnosis').value.trim();
                     updatedCase.treatmentStartDate = getElement('edit-treatmentStartDate').value;
                     updatedCase.treatmentEndDate = getElement('edit-treatmentEndDate').value;
                     updatedCase.categories = [...getElement('edit-category-tags-intensive').querySelectorAll('.category-tag')].map(t => t.dataset.id);
+                } else if (originalCase.caseType === 'emergency') {
+                    const station = getElement('edit-emergencyStation').value.trim();
+                    Object.assign(updatedCase, {
+                        date: getElement('edit-emergencyDate').value,
+                        message: getElement('edit-emergencyMessage').value.trim(),
+                        station: station,
+                        patientDob: getElement('edit-emergencyPatientDob').value,
+                        patientName: getElement('edit-emergencyPatientName').value.trim(),
+                        suspectedDiagnosis: getElement('edit-emergencySuspectedDiagnosis').value.trim(),
+                        specialty: getElement('edit-emergencySpecialty').value,
+                        care: getElement('edit-emergencyCare').value
+                    });
+                    if (station && !userInfo.emergencyStations.includes(station)) {
+                        userInfo.emergencyStations.push(station);
+                    }
                 }
 
-                // Hier Logik für tempRegionalDetails im Edit-Modus hinzufügen, falls erforderlich
                 if (tempRegionalDetails) {
                     updatedCase.regionalAnaesthesiaDetails = tempRegionalDetails;
                     tempRegionalDetails = null;
@@ -1531,7 +1592,7 @@
                 patients[caseIndex] = updatedCase;
                 saveData();
                 closeModal(getElement('edit-case-modal'));
-                showPatientModal(lastOpenedItemId); 
+                if (lastOpenedItemId) showPatientModal(lastOpenedItemId); 
                 showCustomMessage("Erfolg", "Fall erfolgreich aktualisiert.");
             });
 
@@ -1632,12 +1693,6 @@
                 }
                 closeModal(getElement('input-modal'));
             });
-
-            // Dropdowns für Notfalleinsätze füllen
-            const specialtySelect = getElement('emergencySpecialty');
-            emergencySpecialties.forEach(s => specialtySelect.innerHTML += `<option>${s}</option>`);
-            const careSelect = getElement('emergencyCare');
-            emergencyCareTypes.forEach(c => careSelect.innerHTML += `<option>${c}</option>`);
 
         });
 
