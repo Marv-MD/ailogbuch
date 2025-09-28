@@ -98,6 +98,9 @@
                         <h3 class="font-bold text-xl">Anmelden</h3>
                         <div><input type="email" id="login-email" placeholder="E-Mail" class="p-2 border rounded-md w-full" required></div>
                         <div><input type="password" id="login-password" placeholder="Passwort" class="p-2 border rounded-md w-full" required></div>
+                        <div class="text-right text-sm">
+                            <button type="button" id="forgot-password-link" class="text-blue-600 hover:underline">Passwort vergessen?</button>
+                        </div>
                         <button type="submit" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600">Anmelden</button>
                     </form>
                     <form id="register-form" class="hidden space-y-4">
@@ -106,10 +109,17 @@
                         <div><input type="password" id="register-password" placeholder="Passwort (mind. 6 Zeichen)" class="p-2 border rounded-md w-full" required></div>
                         <button type="submit" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">Registrieren</button>
                     </form>
+                    <form id="forgot-password-form" class="hidden space-y-4">
+                        <h3 class="font-bold text-xl">Passwort zurücksetzen</h3>
+                        <p class="text-sm text-gray-600">Geben Sie Ihre E-Mail-Adresse ein, um einen Link zum Zurücksetzen zu erhalten.</p>
+                        <div><input type="email" id="reset-email" placeholder="E-Mail" class="p-2 border rounded-md w-full" required></div>
+                        <button type="submit" class="w-full bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600">Link anfordern</button>
+                    </form>
                 </div>
-                <div id="auth-error" class="text-red-600 text-sm text-center h-4"></div>
+                <div id="auth-message" class="text-red-600 text-sm text-center h-4"></div>
                 <div class="text-center text-sm">
                     <button id="toggle-auth-mode" class="text-blue-600 hover:underline">Noch kein Account? Hier registrieren.</button>
+                    <button id="back-to-login-link" class="hidden text-blue-600 hover:underline">Zurück zum Login</button>
                 </div>
             </div>
         </div>
@@ -292,7 +302,7 @@
             <div class="p-6"><p id="offset-category-name" class="mb-4 text-gray-700"></p><form id="offset-edit-form" class="space-y-4"><div><label for="offset-input" class="text-sm font-medium text-gray-700">Manueller Wert:</label><input type="number" id="offset-input" class="mt-1 p-2 border rounded-md w-full" value="0" step="1"></div><div id="offset-error-message" class="text-red-600 text-sm hidden"></div><button type="submit" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600">Speichern</button></form></div>
         </div>
     </div>
-    <div id="custom-message-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0">
+    <div id="custom-message-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0 z-[100]">
         <div class="modal-content bg-white rounded-lg shadow-xl max-w-sm w-full transform scale-95">
             <div class="p-4 border-b flex justify-between items-center"><h3 id="custom-message-title" class="text-xl font-bold">Nachricht</h3><button id="custom-message-close-btn" class="text-2xl font-bold">&times;</button></div>
             <div class="p-6"><p id="custom-message-text" class="mb-4 text-gray-700"></p><div id="custom-message-buttons" class="flex justify-end space-x-2"><button id="custom-message-ok-btn" class="px-4 py-2 bg-blue-500 text-white font-bold rounded-md hover:bg-blue-600">OK</button><button id="custom-message-cancel-btn" class="px-4 py-2 bg-gray-300 text-gray-800 font-bold rounded-md hover:bg-gray-400 hidden">Abbrechen</button></div></div>
@@ -325,7 +335,7 @@
                             <div><label for="edit-treatmentEndDate" class="text-sm font-medium text-gray-700">Behandlungsende</label><input type="date" id="edit-treatmentEndDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
                         </div>
                     </div>
-                     <div id="edit-emergency-fields" class="space-y-4 hidden">
+                      <div id="edit-emergency-fields" class="space-y-4 hidden">
                         <div><label for="edit-emergencyDate" class="text-sm font-medium text-gray-700">Datum</label><input type="date" id="edit-emergencyDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
                         <div><label for="edit-emergencyMessage" class="text-sm font-medium text-gray-700">Meldung</label><input type="text" id="edit-emergencyMessage" class="mt-1 p-2 border rounded-md w-full"></div>
                         <div>
@@ -356,7 +366,13 @@
                         </div>
                         <div><label for="edit-comments" class="text-sm font-medium text-gray-700">Kommentare (optional)</label><textarea id="edit-comments" class="mt-1 p-2 border rounded-md w-full" rows="3"></textarea></div>
                     </div>
-                    <div class="pt-4 border-t flex justify-end">
+                    <div class="pt-4 border-t flex justify-between items-center">
+                        <button type="button" id="delete-case-btn" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
+                            </svg>
+                            Löschen
+                        </button>
                         <button type="submit" class="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 transition-colors">Änderungen speichern</button>
                     </div>
                 </form>
@@ -402,18 +418,18 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
         // --- Firebase Init ---
         const firebaseConfig = {
-            apiKey: "AIzaSyBLRg7vMJ8qqhtxpR1aR6XvV9zpMLZ5QlI",
-            authDomain: "narkose-tracker.firebaseapp.com",
-            projectId: "narkose-tracker",
-            storageBucket: "narkose-tracker.appspot.com",
-            messagingSenderId: "221054080333",
-            appId: "1:221054080333:web:7df83083e71a5db6275304"
-        };
+  apiKey: "AIzaSyBLRg7vMJ8qqhtxpR1aR6XvV9zpMLZ5QlI",
+  authDomain: "narkose-tracker.firebaseapp.com",
+  projectId: "narkose-tracker",
+  storageBucket: "narkose-tracker.firebasestorage.app",
+  messagingSenderId: "221054080333",
+  appId: "1:221054080333:web:7df83083e71a5db6275304"
+};
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -576,7 +592,7 @@
                     <div class="flex items-center gap-2">
                          <button type="button" class="add-training-period-btn text-sm text-blue-600 hover:underline" data-institution-index="${instIndex}">+ Abschnitt hinzufügen</button>
                          <button type="button" class="remove-institution-btn icon-btn text-red-500" title="Weiterbildungsstätte löschen">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="pointer-events-none" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                             <svg xmlns="http://www.w3.org/2000/svg" class="pointer-events-none" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
                          </button>
                     </div>
                 </div>
@@ -1376,14 +1392,65 @@
                 loadingOverlay.style.display = 'none';
             });
             
-            getElement('login-form').addEventListener('submit', (e) => { e.preventDefault(); signInWithEmailAndPassword(auth, getElement('login-email').value, getElement('login-password').value).catch(err => getElement('auth-error').textContent = "Anmeldung fehlgeschlagen."); });
-            getElement('register-form').addEventListener('submit', (e) => { e.preventDefault(); createUserWithEmailAndPassword(auth, getElement('register-email').value, getElement('register-password').value).catch(err => getElement('auth-error').textContent = "Registrierung fehlgeschlagen."); });
+            getElement('login-form').addEventListener('submit', (e) => { e.preventDefault(); signInWithEmailAndPassword(auth, getElement('login-email').value, getElement('login-password').value).catch(err => getElement('auth-message').textContent = "Anmeldung fehlgeschlagen."); });
+            getElement('register-form').addEventListener('submit', (e) => { e.preventDefault(); createUserWithEmailAndPassword(auth, getElement('register-email').value, getElement('register-password').value).catch(err => getElement('auth-message').textContent = "Registrierung fehlgeschlagen."); });
             getElement('logout-btn').addEventListener('click', () => signOut(auth));
             getElement('toggle-auth-mode').addEventListener('click', () => { 
                 getElement('login-form').classList.toggle('hidden'); 
                 getElement('register-form').classList.toggle('hidden');
-                getElement('auth-error').textContent = '';
+                getElement('auth-message').textContent = '';
                 getElement('toggle-auth-mode').textContent = getElement('login-form').classList.contains('hidden') ? 'Bereits einen Account? Hier anmelden.' : 'Noch kein Account? Hier registrieren.';
+            });
+
+            getElement('forgot-password-link').addEventListener('click', () => {
+                getElement('login-form').classList.add('hidden');
+                getElement('register-form').classList.add('hidden');
+                getElement('forgot-password-form').classList.remove('hidden');
+                getElement('toggle-auth-mode').classList.add('hidden');
+                getElement('back-to-login-link').classList.remove('hidden');
+                getElement('auth-message').textContent = '';
+            });
+
+            getElement('back-to-login-link').addEventListener('click', () => {
+                getElement('forgot-password-form').classList.add('hidden');
+                getElement('login-form').classList.remove('hidden');
+                getElement('register-form').classList.add('hidden');
+                getElement('toggle-auth-mode').classList.remove('hidden');
+                getElement('back-to-login-link').classList.add('hidden');
+                getElement('toggle-auth-mode').textContent = 'Noch kein Account? Hier registrieren.';
+                getElement('auth-message').textContent = '';
+            });
+
+            getElement('forgot-password-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = getElement('reset-email').value;
+                const messageEl = getElement('auth-message');
+                messageEl.textContent = 'Link wird gesendet...';
+                messageEl.className = 'text-gray-600 text-sm text-center h-4';
+
+                sendPasswordResetEmail(auth, email)
+                    .then(() => {
+                        messageEl.textContent = 'Link zum Zurücksetzen wurde an Ihre E-Mail gesendet.';
+                        messageEl.className = 'text-green-600 text-sm text-center h-4';
+                        getElement('forgot-password-form').classList.add('hidden');
+                        getElement('login-form').classList.remove('hidden');
+                        getElement('toggle-auth-mode').classList.remove('hidden');
+                        getElement('back-to-login-link').classList.add('hidden');
+                    })
+                    .catch((error) => {
+                        messageEl.className = 'text-red-600 text-sm text-center h-4';
+                        switch (error.code) {
+                            case 'auth/invalid-email':
+                                messageEl.textContent = 'Ungültige E-Mail-Adresse.';
+                                break;
+                            case 'auth/user-not-found':
+                                messageEl.textContent = 'Kein Benutzer mit dieser E-Mail gefunden.';
+                                break;
+                            default:
+                                messageEl.textContent = 'Ein Fehler ist aufgetreten.';
+                                break;
+                        }
+                    });
             });
 
             getElement('training-start-date').addEventListener('change', () => { 
@@ -1500,6 +1567,9 @@
             getElement('category-select-anesthesia').addEventListener('change', function() { handleCategorySelect(this, getElement('category-tags-anesthesia'), false); });
             getElement('category-select-intensive').addEventListener('change', function() { handleCategorySelect(this, getElement('category-tags-intensive'), false); });
             
+            getElement('edit-category-select-anesthesia').addEventListener('change', function() { handleCategorySelect(this, getElement('edit-category-tags-anesthesia'), true); });
+            getElement('edit-category-select-intensive').addEventListener('change', function() { handleCategorySelect(this, getElement('edit-category-tags-intensive'), true); });
+
             document.body.addEventListener('click', function(e) {
                 if (e.target.classList.contains('category-tag-remove-btn')) {
                     const tag = e.target.parentElement;
@@ -1631,6 +1701,29 @@
                 closeModal(getElement('edit-case-modal'));
                 if (lastOpenedItemId) showPatientModal(lastOpenedItemId); 
                 showCustomMessage("Erfolg", "Fall erfolgreich aktualisiert.");
+            });
+
+
+            getElement('delete-case-btn').addEventListener('click', () => {
+                showCustomMessage("Fall löschen", "Möchten Sie diesen Fall wirklich endgültig löschen? Diese Aktion kann nicht rückgängig gemacht werden.", 'confirm', (confirmed) => {
+                    if (confirmed) {
+                        const caseIndex = patients.findIndex(p => p.id === currentEditingCaseId);
+                        if (caseIndex > -1) {
+                            patients.splice(caseIndex, 1);
+                            saveData();
+                            closeModal(getElement('edit-case-modal'));
+                            if (lastOpenedItemId) {
+                                // Refresh the details modal if it was open
+                                const item = getItemById(lastOpenedItemId);
+                                // Check if the item still exists (it should)
+                                if (item) {
+                                    showPatientModal(lastOpenedItemId);
+                                }
+                            }
+                            showCustomMessage("Erfolg", "Fall wurde gelöscht.");
+                        }
+                    }
+                });
             });
 
 
