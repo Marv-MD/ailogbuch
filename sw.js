@@ -1,7 +1,7 @@
 // sw.js - Service Worker für Offline-Fähigkeit
 
 // Name des Caches. Ändern Sie diesen Namen, wenn Sie die App-Dateien aktualisieren.
-const CACHE_NAME = 'ai-logbuch-cache-v8';
+const CACHE_NAME = 'ai-logbuch-cache-v9';
 
 // Eine Liste der Dateien, die für den Offline-Betrieb unerlässlich sind.
 const urlsToCache = [
