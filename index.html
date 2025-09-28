@@ -216,7 +216,7 @@
                 <div id="intensive-fields" class="space-y-4 hidden">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div><label for="treatmentStartDate" class="text-sm font-medium text-gray-700">Behandlungsbeginn</label><input type="date" id="treatmentStartDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
-                        <div><label for="treatmentEndDate" class="text-sm font-medium text-gray-700">Behandlungsende</label><input type="date" id="treatmentEndDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                        <div><label for="treatmentEndDate" class="text-sm font-medium text-gray-700">Behandlungsende (optional)</label><input type="date" id="treatmentEndDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
                     </div>
                 </div>
                  <div id="emergency-fields" class="space-y-4 hidden">
@@ -270,7 +270,9 @@
              <div class="card p-4 md:p-6 mb-8">
                 <h3 class="text-xl font-bold text-gray-700 mb-4">Datenverwaltung</h3>
                 <div class="flex flex-wrap justify-center items-center gap-4">
-                    <button id="export-logbook-btn" class="w-full sm:w-auto bg-green-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-800">Logbuch exportieren (CSV)</button>
+                    <button id="export-logbook-btn" class="w-full sm:w-auto bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700">Logbuchübersicht exportieren (CSV)</button>
+                    <button id="export-anesthesia-btn" class="w-full sm:w-auto bg-teal-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-700">Narkosen exportieren (CSV)</button>
+                    <button id="export-intensive-btn" class="w-full sm:w-auto bg-amber-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-amber-700">Intensivfälle exportieren (CSV)</button>
                     <button id="export-emergency-btn" class="w-full sm:w-auto bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700">Notfalleinsätze exportieren (CSV)</button>
                     <button id="export-data-btn" class="w-full sm:w-auto bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">Backup exportieren</button>
                     <button id="import-data-btn" class="w-full sm:w-auto bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600">Backup importieren</button>
@@ -314,68 +316,68 @@
         <div class="modal-content bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col transform scale-95">
              <div class="p-4 border-b flex justify-between items-center"><h3 class="text-xl font-bold">Fall bearbeiten</h3><button id="edit-case-modal-close-btn" class="text-2xl font-bold">&times;</button></div>
              <div class="p-6 overflow-y-auto">
-                <form id="edit-case-form" class="space-y-4">
-                    <div id="edit-form-errors" class="text-red-600 text-sm mb-4 hidden"></div>
-                    <div>
-                        <label for="edit-caseId" class="text-sm font-medium text-gray-700">Fall-ID (z.B. aus SAP)</label>
-                        <input type="text" id="edit-caseId" inputmode="numeric" class="mt-1 p-2 border rounded-md w-full" required>
-                    </div>
-                    
-                    <div id="edit-shared-fields" class="space-y-4">
-                        <div><label for="edit-diagnosis" class="text-sm font-medium text-gray-700">Diagnose</label><input type="text" id="edit-diagnosis" class="mt-1 p-2 border rounded-md w-full"></div>
-                    </div>
-                    <div id="edit-anesthesia-fields" class="space-y-4">
-                        <div><label for="edit-dateOfAnesthesia" class="text-sm font-medium text-gray-700">Datum der Narkose</label><input type="date" id="edit-dateOfAnesthesia" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
-                        <div><label for="edit-dob" class="text-sm font-medium text-gray-700">Geburtsdatum Patient/in (optional)</label><input type="date" id="edit-dob" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
-                        <div><label for="edit-operation" class="text-sm font-medium text-gray-700">Operation</label><input type="text" id="edit-operation" class="mt-1 p-2 border rounded-md w-full"></div>
-                    </div>
-                    <div id="edit-intensive-fields" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label for="edit-treatmentStartDate" class="text-sm font-medium text-gray-700">Behandlungsbeginn</label><input type="date" id="edit-treatmentStartDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
-                            <div><label for="edit-treatmentEndDate" class="text-sm font-medium text-gray-700">Behandlungsende</label><input type="date" id="edit-treatmentEndDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
-                        </div>
-                    </div>
-                      <div id="edit-emergency-fields" class="space-y-4 hidden">
-                        <div><label for="edit-emergencyDate" class="text-sm font-medium text-gray-700">Datum</label><input type="date" id="edit-emergencyDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
-                        <div><label for="edit-emergencyMessage" class="text-sm font-medium text-gray-700">Meldung</label><input type="text" id="edit-emergencyMessage" class="mt-1 p-2 border rounded-md w-full"></div>
-                        <div>
-                            <label for="edit-emergencyStation" class="text-sm font-medium text-gray-700">Wache</label>
-                            <input type="text" id="edit-emergencyStation" class="mt-1 p-2 border rounded-md w-full">
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label for="edit-emergencyPatientDob" class="text-sm font-medium text-gray-700">Geburtsdatum Pat. (optional)</label><input type="date" id="edit-emergencyPatientDob" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
-                            <div><label for="edit-emergencyPatientName" class="text-sm font-medium text-gray-700">Name/Initialen Pat. (optional)</label><input type="text" id="edit-emergencyPatientName" class="mt-1 p-2 border rounded-md w-full"></div>
-                        </div>
-                        <div><label for="edit-emergencySuspectedDiagnosis" class="text-sm font-medium text-gray-700">Verdachtsdiagnose</label><input type="text" id="edit-emergencySuspectedDiagnosis" class="mt-1 p-2 border rounded-md w-full"></div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label for="edit-emergencySpecialty" class="text-sm font-medium text-gray-700">Fachrichtung</label><select id="edit-emergencySpecialty" class="w-full mt-1 p-2 border rounded-md bg-white custom-select"></select></div>
-                            <div><label for="edit-emergencyCare" class="text-sm font-medium text-gray-700">Versorgung</label><select id="edit-emergencyCare" class="w-full mt-1 p-2 border rounded-md bg-white custom-select"></select></div>
-                        </div>
-                    </div>
-                    
-                    <div id="edit-common-fields-after" class="space-y-4">
-                        <div id="edit-category-selection-anesthesia">
-                            <label class="font-semibold block mb-2">Facharzt-Kategorie(n) Anästhesie:</label>
-                            <select id="edit-category-select-anesthesia" class="w-full p-2 border rounded-md bg-white custom-select"><option value="">Kategorie auswählen...</option></select>
-                            <div id="edit-category-tags-anesthesia" class="mt-3 flex flex-wrap gap-2"></div>
-                        </div>
-                        <div id="edit-category-selection-intensive">
-                            <label class="font-semibold block mb-2">Facharzt-Kategorie(n) Intensiv- und Notfallmedizin:</label>
-                            <select id="edit-category-select-intensive" class="w-full p-2 border rounded-md bg-white custom-select"><option value="">Kategorie auswählen...</option></select>
-                            <div id="edit-category-tags-intensive" class="mt-3 flex flex-wrap gap-2"></div>
-                        </div>
-                        <div><label for="edit-comments" class="text-sm font-medium text-gray-700">Kommentare (optional)</label><textarea id="edit-comments" class="mt-1 p-2 border rounded-md w-full" rows="3"></textarea></div>
-                    </div>
-                    <div class="pt-4 border-t flex justify-between items-center">
-                        <button type="button" id="delete-case-btn" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
-                            </svg>
-                            Löschen
-                        </button>
-                        <button type="submit" class="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 transition-colors">Änderungen speichern</button>
-                    </div>
-                </form>
+                 <form id="edit-case-form" class="space-y-4">
+                     <div id="edit-form-errors" class="text-red-600 text-sm mb-4 hidden"></div>
+                     <div>
+                         <label for="edit-caseId" class="text-sm font-medium text-gray-700">Fall-ID (z.B. aus SAP)</label>
+                         <input type="text" id="edit-caseId" inputmode="numeric" class="mt-1 p-2 border rounded-md w-full" required>
+                     </div>
+                     
+                     <div id="edit-shared-fields" class="space-y-4">
+                         <div><label for="edit-diagnosis" class="text-sm font-medium text-gray-700">Diagnose</label><input type="text" id="edit-diagnosis" class="mt-1 p-2 border rounded-md w-full"></div>
+                     </div>
+                     <div id="edit-anesthesia-fields" class="space-y-4">
+                         <div><label for="edit-dateOfAnesthesia" class="text-sm font-medium text-gray-700">Datum der Narkose</label><input type="date" id="edit-dateOfAnesthesia" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                         <div><label for="edit-dob" class="text-sm font-medium text-gray-700">Geburtsdatum Patient/in (optional)</label><input type="date" id="edit-dob" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                         <div><label for="edit-operation" class="text-sm font-medium text-gray-700">Operation</label><input type="text" id="edit-operation" class="mt-1 p-2 border rounded-md w-full"></div>
+                     </div>
+                     <div id="edit-intensive-fields" class="space-y-4">
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div><label for="edit-treatmentStartDate" class="text-sm font-medium text-gray-700">Behandlungsbeginn</label><input type="date" id="edit-treatmentStartDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                             <div><label for="edit-treatmentEndDate" class="text-sm font-medium text-gray-700">Behandlungsende (optional)</label><input type="date" id="edit-treatmentEndDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                         </div>
+                     </div>
+                       <div id="edit-emergency-fields" class="space-y-4 hidden">
+                         <div><label for="edit-emergencyDate" class="text-sm font-medium text-gray-700">Datum</label><input type="date" id="edit-emergencyDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                         <div><label for="edit-emergencyMessage" class="text-sm font-medium text-gray-700">Meldung</label><input type="text" id="edit-emergencyMessage" class="mt-1 p-2 border rounded-md w-full"></div>
+                         <div>
+                             <label for="edit-emergencyStation" class="text-sm font-medium text-gray-700">Wache</label>
+                             <input type="text" id="edit-emergencyStation" class="mt-1 p-2 border rounded-md w-full">
+                         </div>
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div><label for="edit-emergencyPatientDob" class="text-sm font-medium text-gray-700">Geburtsdatum Pat. (optional)</label><input type="date" id="edit-emergencyPatientDob" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                             <div><label for="edit-emergencyPatientName" class="text-sm font-medium text-gray-700">Name/Initialen Pat. (optional)</label><input type="text" id="edit-emergencyPatientName" class="mt-1 p-2 border rounded-md w-full"></div>
+                         </div>
+                         <div><label for="edit-emergencySuspectedDiagnosis" class="text-sm font-medium text-gray-700">Verdachtsdiagnose</label><input type="text" id="edit-emergencySuspectedDiagnosis" class="mt-1 p-2 border rounded-md w-full"></div>
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div><label for="edit-emergencySpecialty" class="text-sm font-medium text-gray-700">Fachrichtung</label><select id="edit-emergencySpecialty" class="w-full mt-1 p-2 border rounded-md bg-white custom-select"></select></div>
+                             <div><label for="edit-emergencyCare" class="text-sm font-medium text-gray-700">Versorgung</label><select id="edit-emergencyCare" class="w-full mt-1 p-2 border rounded-md bg-white custom-select"></select></div>
+                         </div>
+                     </div>
+                     
+                     <div id="edit-common-fields-after" class="space-y-4">
+                         <div id="edit-category-selection-anesthesia">
+                             <label class="font-semibold block mb-2">Facharzt-Kategorie(n) Anästhesie:</label>
+                             <select id="edit-category-select-anesthesia" class="w-full p-2 border rounded-md bg-white custom-select"><option value="">Kategorie auswählen...</option></select>
+                             <div id="edit-category-tags-anesthesia" class="mt-3 flex flex-wrap gap-2"></div>
+                         </div>
+                         <div id="edit-category-selection-intensive">
+                             <label class="font-semibold block mb-2">Facharzt-Kategorie(n) Intensiv- und Notfallmedizin:</label>
+                             <select id="edit-category-select-intensive" class="w-full p-2 border rounded-md bg-white custom-select"><option value="">Kategorie auswählen...</option></select>
+                             <div id="edit-category-tags-intensive" class="mt-3 flex flex-wrap gap-2"></div>
+                         </div>
+                         <div><label for="edit-comments" class="text-sm font-medium text-gray-700">Kommentare (optional)</label><textarea id="edit-comments" class="mt-1 p-2 border rounded-md w-full" rows="3"></textarea></div>
+                     </div>
+                     <div class="pt-4 border-t flex justify-between items-center">
+                         <button type="button" id="delete-case-btn" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                 <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
+                             </svg>
+                             Löschen
+                         </button>
+                         <button type="submit" class="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 transition-colors">Änderungen speichern</button>
+                     </div>
+                 </form>
              </div>
         </div>
     </div>
@@ -423,13 +425,13 @@
 
         // --- Firebase Init ---
         const firebaseConfig = {
-  apiKey: "AIzaSyBLRg7vMJ8qqhtxpR1aR6XvV9zpMLZ5QlI",
-  authDomain: "narkose-tracker.firebaseapp.com",
-  projectId: "narkose-tracker",
-  storageBucket: "narkose-tracker.firebasestorage.app",
-  messagingSenderId: "221054080333",
-  appId: "1:221054080333:web:7df83083e71a5db6275304"
-};
+            apiKey: "AIzaSyBLRg7vMJ8qqhtxpR1aR6XvV9zpMLZ5QlI",
+            authDomain: "narkose-tracker.firebaseapp.com",
+            projectId: "narkose-tracker",
+            storageBucket: "narkose-tracker.firebasestorage.app",
+            messagingSenderId: "221054080333",
+            appId: "1:221054080333:web:7df83083e71a5db6275304"
+        };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -1074,7 +1076,7 @@
             if (patientList.length === 0) { 
                 body.innerHTML = '<p class="text-gray-600">Keine Fälle für diese Kategorie erfasst.</p>'; 
             } else {
-                body.innerHTML = `<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Datum/Zeitraum</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Fall-ID</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Diagnose/OP</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Kommentar</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Aktion</th></tr></thead><tbody class="bg-white divide-y">${patientList.sort((a,b) => new Date(b.dateOfAnesthesia || b.treatmentEndDate) - new Date(a.dateOfAnesthesia || a.treatmentEndDate)).map(p => `<tr><td class="px-6 py-4 whitespace-nowrap text-sm">${p.caseType === 'anesthesia' ? (p.dateOfAnesthesia ? new Date(p.dateOfAnesthesia+'T00:00:00').toLocaleDateString('de-DE') : 'N/A') : `${p.treatmentStartDate ? new Date(p.treatmentStartDate+'T00:00:00').toLocaleDateString('de-DE') : ''} - ${p.treatmentEndDate ? new Date(p.treatmentEndDate+'T00:00:00').toLocaleDateString('de-DE') : ''}`}</td><td class="px-6 py-4 whitespace-nowrap text-sm">${p.caseId}</td><td class="px-6 py-4 text-sm"><div class="font-semibold">${p.operation || p.diagnosis || ''}</div><div class="text-gray-500">${p.operation ? p.diagnosis : ''}</div></td><td class="px-6 py-4 text-sm">${p.comments || ''}</td><td class="px-6 py-4 whitespace-nowrap text-sm"><button class="edit-case-btn text-indigo-600 hover:text-indigo-900 font-semibold" data-case-id="${p.id}">Bearbeiten</button></td></tr>`).join('')}</tbody></table></div>`;
+                body.innerHTML = `<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Datum/Zeitraum</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Fall-ID</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Diagnose/OP</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Kommentar</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Aktion</th></tr></thead><tbody class="bg-white divide-y">${patientList.sort((a,b) => new Date(b.dateOfAnesthesia || b.treatmentEndDate) - new Date(a.dateOfAnesthesia || a.treatmentEndDate)).map(p => `<tr><td class="px-6 py-4 whitespace-nowrap text-sm">${p.caseType === 'anesthesia' ? (p.dateOfAnesthesia ? new Date(p.dateOfAnesthesia+'T00:00:00').toLocaleDateString('de-DE') : 'N/A') : `${p.treatmentStartDate ? new Date(p.treatmentStartDate+'T00:00:00').toLocaleDateString('de-DE') : 'N/A'} - ${p.treatmentEndDate ? new Date(p.treatmentEndDate+'T00:00:00').toLocaleDateString('de-DE') : 'laufend'}`}</td><td class="px-6 py-4 whitespace-nowrap text-sm">${p.caseId}</td><td class="px-6 py-4 text-sm"><div class="font-semibold">${p.operation || p.diagnosis || ''}</div><div class="text-gray-500">${p.operation ? p.diagnosis : ''}</div></td><td class="px-6 py-4 text-sm">${p.comments || ''}</td><td class="px-6 py-4 whitespace-nowrap text-sm"><button class="edit-case-btn text-indigo-600 hover:text-indigo-900 font-semibold" data-case-id="${p.id}">Bearbeiten</button></td></tr>`).join('')}</tbody></table></div>`;
             }
             openModal(getElement('patient-modal'));
         }
@@ -1198,7 +1200,76 @@
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `A&I-Logbuch_Export_${new Date().toISOString().slice(0, 10)}.csv`);
+            link.setAttribute("download", `A&I-Logbuch_Uebersicht_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportAnesthesiaCasesAsCSV() {
+            const headers = ["Datum", "Fall-ID", "Operation", "Diagnose", "Patienten-Geb.", "Kategorien", "Kommentare"];
+            const anesthesiaCases = patients.filter(p => p.caseType === 'anesthesia');
+            
+            if (anesthesiaCases.length === 0) {
+                showCustomMessage("Information", "Es sind keine Narkose-Fälle zum Exportieren vorhanden.");
+                return;
+            }
+
+            const rows = anesthesiaCases
+                .sort((a,b) => new Date(b.dateOfAnesthesia) - new Date(a.dateOfAnesthesia))
+                .map(p => {
+                    const escape = (str) => `"${(str || '').toString().replace(/"/g, '""')}"`;
+                    const fDate = (date) => date ? new Date(date+'T00:00:00').toLocaleDateString('de-DE') : '';
+                    return [
+                        fDate(p.dateOfAnesthesia),
+                        escape(p.caseId),
+                        escape(p.operation),
+                        escape(p.diagnosis),
+                        fDate(p.dob),
+                        escape((p.categories || []).map(id => getItemById(id)?.name).join('; ')),
+                        escape(p.comments)
+                    ].join(',');
+                });
+
+            const csvContent = "data:text/csv;charset=utf-8," + [headers.join(',')].concat(rows).join('\r\n');
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Narkosen_Export_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportIntensiveCasesAsCSV() {
+            const headers = ["Beginn", "Ende", "Fall-ID", "Diagnose", "Kategorien", "Kommentare"];
+            const intensiveCases = patients.filter(p => p.caseType === 'intensive');
+            
+            if (intensiveCases.length === 0) {
+                showCustomMessage("Information", "Es sind keine Intensiv-Fälle zum Exportieren vorhanden.");
+                return;
+            }
+
+            const rows = intensiveCases
+                .sort((a,b) => new Date(b.treatmentStartDate) - new Date(a.treatmentStartDate))
+                .map(p => {
+                    const escape = (str) => `"${(str || '').toString().replace(/"/g, '""')}"`;
+                    const fDate = (date) => date ? new Date(date+'T00:00:00').toLocaleDateString('de-DE') : '';
+                    return [
+                        fDate(p.treatmentStartDate),
+                        p.treatmentEndDate ? fDate(p.treatmentEndDate) : 'laufend',
+                        escape(p.caseId),
+                        escape(p.diagnosis),
+                        escape((p.categories || []).map(id => getItemById(id)?.name).join('; ')),
+                        escape(p.comments)
+                    ].join(',');
+                });
+
+            const csvContent = "data:text/csv;charset=utf-8," + [headers.join(',')].concat(rows).join('\r\n');
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Intensivfaelle_Export_${new Date().toISOString().slice(0, 10)}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -1621,7 +1692,7 @@
                     }
                 } else if (currentCaseType === 'intensive') {
                     Object.assign(patientData, { treatmentStartDate: getElement('treatmentStartDate').value, treatmentEndDate: getElement('treatmentEndDate').value });
-                    if (!patientData.treatmentStartDate || !patientData.treatmentEndDate) errors.push("Behandlungsbeginn und -ende sind Pflichtfelder.");
+                    if (!patientData.treatmentStartDate) errors.push("Behandlungsbeginn ist ein Pflichtfeld.");
                     patientData.categories = [...document.querySelectorAll('#category-tags-intensive .category-tag')].map(t => t.dataset.id);
                     if (patientData.categories.length === 0) errors.push("Bitte mindestens eine Kategorie auswählen.");
                 } else if (currentCaseType === 'emergency') {
@@ -1751,6 +1822,8 @@
             });
 
             getElement('export-logbook-btn').addEventListener('click', exportLogbookAsCSV);
+            getElement('export-anesthesia-btn').addEventListener('click', exportAnesthesiaCasesAsCSV);
+            getElement('export-intensive-btn').addEventListener('click', exportIntensiveCasesAsCSV);
             getElement('export-emergency-btn').addEventListener('click', exportEmergencyMissionsAsCSV);
             getElement('export-data-btn').addEventListener('click', () => { const dataStr = JSON.stringify({ userInfo, patients, manualOffsets }, null, 2); const blob = new Blob([dataStr], {type: "application/json"}); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `ai-logbuch-backup_${new Date().toISOString().slice(0, 10)}.json`; link.click(); URL.revokeObjectURL(link.href); });
             getElement('import-data-btn').addEventListener('click', () => getElement('import-file-input').click());
@@ -1830,3 +1903,4 @@
     </script>
 </body>
 </html>
+
