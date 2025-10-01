@@ -1,11 +1,12 @@
 // sw.js - Robuster Service Worker für Offline-Fähigkeit
 
-const CACHE_NAME = 'ai-logbuch-cache-v12';
+const CACHE_NAME = 'ai-logbuch-cache-v13';
 
 // Wesentliche lokale App-Dateien, die immer funktionieren müssen.
 const CORE_ASSETS = [
   './', // Das Haupt-HTML-Dokument
   './manifest.webmanifest'
+  './Logbuch-Icon_neu.png'
   // Fügen Sie hier lokale Bilder hinzu, falls vorhanden, z.B. './icon.png'
 ];
 
