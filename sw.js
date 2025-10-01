@@ -1,83 +1,97 @@
-// sw.js - Service Worker für Offline-Fähigkeit
+// sw.js - Robuster Service Worker für Offline-Fähigkeit
 
-// Name des Caches. Ändern Sie diesen Namen, wenn Sie die App-Dateien aktualisieren.
-const CACHE_NAME = 'ai-logbuch-cache-v10';
+const CACHE_NAME = 'ai-logbuch-cache-v11';
 
-// Eine Liste der Dateien, die für den Offline-Betrieb unerlässlich sind.
-const urlsToCache = [
+// Wesentliche lokale App-Dateien, die immer funktionieren müssen.
+const CORE_ASSETS = [
   './', // Das Haupt-HTML-Dokument
-  './manifest.webmanifest',
-  './Logbuch-Icon_2025-08-14.png', // Das Logo hinzugefügt
-  'https://cdn.tailwindcss.com',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
-  'https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js',
-  'https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js',
-  'https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js'
+  './manifest.webmanifest'
+  // Fügen Sie hier lokale Bilder hinzu, falls vorhanden, z.B. './icon.png'
 ];
 
 // Schritt 1: Installation
-// Dieser Schritt wird ausgeführt, wenn der Service Worker zum ersten Mal installiert wird.
 self.addEventListener('install', event => {
-  // Wir warten, bis der Cache geöffnet und alle unsere App-Dateien gespeichert sind.
+  console.log('Service Worker: Installation...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Cache wurde geöffnet');
-        return cache.addAll(urlsToCache);
+        console.log('Service Worker: Caching von Core-Assets...');
+        // fetch-Anfragen werden ohne Cache-Optionen gesendet
+        const requests = CORE_ASSETS.map(url => new Request(url, { cache: 'no-store' }));
+        return cache.addAll(requests);
       })
+      .then(() => self.skipWaiting()) // Aktiviert den neuen SW sofort
   );
 });
 
-// Schritt 2: Anfragen abfangen (Fetch)
-// Jedes Mal, wenn die App eine Datei anfordert (z.B. ein Bild, ein Skript), wird dieses Ereignis ausgelöst.
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Wenn die angeforderte Datei im Cache gefunden wird, geben wir sie von dort zurück.
-        if (response) {
-          return response;
-        }
-
-        // Wenn die Datei nicht im Cache ist, versuchen wir, sie aus dem Netzwerk zu laden.
-        return fetch(event.request).then(
-          response => {
-            // Überprüfen, ob wir eine gültige Antwort vom Netzwerk erhalten haben.
-            if(!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-
-            // WICHTIG: Wir klonen die Antwort. Eine Antwort kann nur einmal verwendet werden.
-            // Wir brauchen eine Kopie für den Browser und eine, um sie im Cache zu speichern.
-            const responseToCache = response.clone();
-
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              });
-
-            return response;
-          }
-        );
-      })
-    );
-});
-
-// Schritt 3: Aktivierung
-// Dieser Schritt wird ausgeführt, nachdem der Service Worker installiert wurde.
-// Er ist ideal, um alte, nicht mehr benötigte Caches zu löschen.
+// Schritt 2: Aktivierung
+// Löscht alte, nicht mehr benötigte Caches.
 self.addEventListener('activate', event => {
+  console.log('Service Worker: Aktivierung...');
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheWhitelist.indexOf(cacheName) === -1) {
-            // Wenn ein Cache nicht in unserer Whitelist ist, löschen wir ihn.
+            console.log('Service Worker: Lösche alten Cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
-    })
+    }).then(() => self.clients.claim()) // Übernimmt die Kontrolle über offene Clients
+  );
+});
+
+// Schritt 3: Anfragen abfangen (Fetch)
+self.addEventListener('fetch', event => {
+  const { request } = event;
+
+  // Für Navigationsanfragen (HTML-Seite) -> "Network falling back to cache"
+  // Stellt sicher, dass der Benutzer immer die neueste Version der App sieht, wenn online.
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          // Wenn online, Antwort klonen, im Cache speichern und an den Browser zurückgeben.
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(request, responseToCache);
+          });
+          return response;
+        })
+        .catch(() => {
+          // Wenn offline, die Seite aus dem Cache holen.
+          return caches.match(request);
+        })
+    );
+    return;
+  }
+  
+  // Für andere Anfragen (CSS, JS, Fonts, etc.) -> "Cache first, falling back to network"
+  // Sorgt für maximale Geschwindigkeit und Offline-Fähigkeit.
+  event.respondWith(
+    caches.match(request)
+      .then(cachedResponse => {
+        // Wenn im Cache, sofort zurückgeben.
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        // Wenn nicht im Cache, vom Netzwerk holen.
+        return fetch(request).then(networkResponse => {
+          // Wichtige Prüfung: Nur gültige Antworten cachen.
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, responseToCache);
+            });
+          }
+          return networkResponse;
+        }).catch(error => {
+          console.error('Service Worker: Fetch-Fehler:', error);
+          // Hier könnte man eine generische Offline-Antwort für Bilder etc. zurückgeben
+        });
+      })
   );
 });
