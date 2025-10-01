@@ -357,22 +357,22 @@
                          </div>
                      </div>
                       <div id="edit-emergency-fields" class="space-y-4 hidden">
-                        <div><label for="edit-emergencyDate" class="text-sm font-medium text-gray-700">Datum</label><input type="date" id="edit-emergencyDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
-                        <div><label for="edit-emergencyMessage" class="text-sm font-medium text-gray-700">Meldung</label><input type="text" id="edit-emergencyMessage" class="mt-1 p-2 border rounded-md w-full"></div>
-                        <div>
-                            <label for="edit-emergencyStation" class="text-sm font-medium text-gray-700">Wache</label>
-                            <input type="text" id="edit-emergencyStation" class="mt-1 p-2 border rounded-md w-full">
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label for="edit-emergencyPatientDob" class="text-sm font-medium text-gray-700">Geburtsdatum Pat. (optional)</label><input type="date" id="edit-emergencyPatientDob" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
-                            <div><label for="edit-emergencyPatientName" class="text-sm font-medium text-gray-700">Name/Initialen Pat. (optional)</label><input type="text" id="edit-emergencyPatientName" class="mt-1 p-2 border rounded-md w-full"></div>
-                        </div>
-                        <div><label for="edit-emergencySuspectedDiagnosis" class="text-sm font-medium text-gray-700">Verdachtsdiagnose</label><input type="text" id="edit-emergencySuspectedDiagnosis" class="mt-1 p-2 border rounded-md w-full"></div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label for="edit-emergencySpecialty" class="text-sm font-medium text-gray-700">Fachrichtung</label><select id="edit-emergencySpecialty" class="w-full mt-1 p-2 border rounded-md bg-white custom-select"></select></div>
-                            <div><label for="edit-emergencyCare" class="text-sm font-medium text-gray-700">Versorgung</label><select id="edit-emergencyCare" class="w-full mt-1 p-2 border rounded-md bg-white custom-select"></select></div>
-                        </div>
-                      </div>
+                         <div><label for="edit-emergencyDate" class="text-sm font-medium text-gray-700">Datum</label><input type="date" id="edit-emergencyDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                         <div><label for="edit-emergencyMessage" class="text-sm font-medium text-gray-700">Meldung</label><input type="text" id="edit-emergencyMessage" class="mt-1 p-2 border rounded-md w-full"></div>
+                         <div>
+                             <label for="edit-emergencyStation" class="text-sm font-medium text-gray-700">Wache</label>
+                             <input type="text" id="edit-emergencyStation" class="mt-1 p-2 border rounded-md w-full">
+                         </div>
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div><label for="edit-emergencyPatientDob" class="text-sm font-medium text-gray-700">Geburtsdatum Pat. (optional)</label><input type="date" id="edit-emergencyPatientDob" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                             <div><label for="edit-emergencyPatientName" class="text-sm font-medium text-gray-700">Name/Initialen Pat. (optional)</label><input type="text" id="edit-emergencyPatientName" class="mt-1 p-2 border rounded-md w-full"></div>
+                         </div>
+                         <div><label for="edit-emergencySuspectedDiagnosis" class="text-sm font-medium text-gray-700">Verdachtsdiagnose</label><input type="text" id="edit-emergencySuspectedDiagnosis" class="mt-1 p-2 border rounded-md w-full"></div>
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div><label for="edit-emergencySpecialty" class="text-sm font-medium text-gray-700">Fachrichtung</label><select id="edit-emergencySpecialty" class="w-full mt-1 p-2 border rounded-md bg-white custom-select"></select></div>
+                             <div><label for="edit-emergencyCare" class="text-sm font-medium text-gray-700">Versorgung</label><select id="edit-emergencyCare" class="w-full mt-1 p-2 border rounded-md bg-white custom-select"></select></div>
+                         </div>
+                     </div>
                      
                      <div id="edit-common-fields-after" class="space-y-4">
                          <div id="edit-category-selection-anesthesia">
@@ -438,9 +438,9 @@
 
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         // --- Firebase Init ---
         const firebaseConfig = {
@@ -454,6 +454,18 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // WICHTIG: Offline-Persistenz aktivieren
+        enableIndexedDbPersistence(db)
+          .catch((err) => {
+            if (err.code == 'failed-precondition') {
+              // Wahrscheinlich sind mehrere Tabs geöffnet, was ein Problem sein kann.
+              console.error("Firestore (Offline): Persistenz konnte nicht aktiviert werden, evtl. mehrere Tabs geöffnet.", err);
+            } else if (err.code == 'unimplemented') {
+              // Der Browser unterstützt diese Funktion nicht.
+              console.error("Firestore (Offline): Der Browser unterstützt die Offline-Persistenz nicht.", err);
+            }
+          });
         
         // --- Globaler Zustand & Konfiguration ---
         let patients = [];
@@ -718,7 +730,7 @@
                         const endDate = p.end ? new Date(p.end) : today;
                         if(startDate < endDate) {
                             const diffTime = Math.abs(endDate - startDate);
-                            const diffDays = (diffTime / (1000 * 60 * 60 * 24)) + 1; // Inclusive of end date
+                            const diffDays = (diffTime / (1000 * 60 * 60 * 24)) + 1;
                             months += (diffDays / 30.4375) * ((p.anteil || 100) / 100);
                         }
                     }
@@ -1741,9 +1753,10 @@
                     });
                     return;
                 } else if (target.classList.contains('save-period-btn')) {
+                    const endDateInput = periodItem.querySelector('[data-field="end"]');
                     const newPeriodData = {
                         start: periodItem.querySelector('[data-field="start"]').value,
-                        end: periodItem.querySelector('[data-field="end"]').value,
+                        end: endDateInput.disabled ? '' : endDateInput.value,
                         anteil: periodItem.querySelector('[data-field="anteil"]').value,
                         abteilung: periodItem.querySelector('[data-field="abteilung"]').value,
                         supervisor: periodItem.querySelector('[data-field="supervisor"]').value,
@@ -1918,7 +1931,6 @@
                         care: getElement('edit-emergencyCare').value
                     });
                     if (station && !userInfo.emergencyStations.includes(station)) {
-                         if (!userInfo.emergencyStations) userInfo.emergencyStations = [];
                         userInfo.emergencyStations.push(station);
                     }
                 }
@@ -1945,7 +1957,12 @@
                             saveData();
                             closeModal(getElement('edit-case-modal'));
                             if (lastOpenedItemId) {
-                                showPatientModal(lastOpenedItemId);
+                                // Refresh the details modal if it was open
+                                const item = getItemById(lastOpenedItemId);
+                                // Check if the item still exists (it should)
+                                if (item) {
+                                    showPatientModal(lastOpenedItemId);
+                                }
                             }
                             showCustomMessage("Erfolg", "Fall wurde gelöscht.");
                         }
@@ -2036,7 +2053,6 @@
                 }
             
                 if (!isMainHeader) {
-                    // Adjust parent height if a sub-item is opened/closed
                     const mainContent = header.closest('.card > .collapsible-content');
                     if (mainContent && mainContent.style.maxHeight) { 
                         setTimeout(() => {
@@ -2060,11 +2076,4 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
 
