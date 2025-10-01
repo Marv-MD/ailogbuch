@@ -184,6 +184,7 @@
                         </div>
                         <p>Bisher absolvierte Monate (effektiv): <strong id="completed-months-display" class="font-mono">0 / 60</strong></p>
                         <p>Voraussichtliches Ende der Weiterbildung: <strong id="prognosis-end-date-display" class="font-mono">--</strong></p>
+                        <p>Verbleibende Monate: <strong id="remaining-months-display" class="font-mono">--</strong></p>
                     </div>
                 </div>
             </div>
@@ -209,18 +210,36 @@
                     <div><label for="diagnosis" class="text-sm font-medium text-gray-700">Diagnose</label><input type="text" id="diagnosis" class="mt-1 p-2 border rounded-md w-full"></div>
                 </div>
                 <div id="anesthesia-fields" class="space-y-4 hidden">
-                    <div><label for="dateOfAnesthesia" class="text-sm font-medium text-gray-700">Datum der Narkose</label><input type="date" id="dateOfAnesthesia" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                    <div>
+                        <label for="dateOfAnesthesia" class="text-sm font-medium text-gray-700">Datum der Narkose</label>
+                        <div class="flex items-center gap-2 mt-1">
+                            <input type="date" id="dateOfAnesthesia" class="p-2 border rounded-md w-full text-gray-500">
+                            <button type="button" class="today-btn px-4 py-2 bg-gray-200 text-sm font-semibold rounded-md hover:bg-gray-300 whitespace-nowrap" data-target="dateOfAnesthesia">Heute</button>
+                        </div>
+                    </div>
                     <div><label for="dob" class="text-sm font-medium text-gray-700">Geburtsdatum Patient/in (optional)</label><input type="date" id="dob" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
                     <div><label for="operation" class="text-sm font-medium text-gray-700">Operation</label><input type="text" id="operation" class="mt-1 p-2 border rounded-md w-full"></div>
                 </div>
                 <div id="intensive-fields" class="space-y-4 hidden">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label for="treatmentStartDate" class="text-sm font-medium text-gray-700">Behandlungsbeginn</label><input type="date" id="treatmentStartDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                        <div>
+                            <label for="treatmentStartDate" class="text-sm font-medium text-gray-700">Behandlungsbeginn</label>
+                            <div class="flex items-center gap-2 mt-1">
+                                <input type="date" id="treatmentStartDate" class="p-2 border rounded-md w-full text-gray-500">
+                                <button type="button" class="today-btn px-4 py-2 bg-gray-200 text-sm font-semibold rounded-md hover:bg-gray-300 whitespace-nowrap" data-target="treatmentStartDate">Heute</button>
+                            </div>
+                        </div>
                         <div><label for="treatmentEndDate" class="text-sm font-medium text-gray-700">Behandlungsende (optional)</label><input type="date" id="treatmentEndDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
                     </div>
                 </div>
                  <div id="emergency-fields" class="space-y-4 hidden">
-                    <div><label for="emergencyDate" class="text-sm font-medium text-gray-700">Datum</label><input type="date" id="emergencyDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                    <div>
+                        <label for="emergencyDate" class="text-sm font-medium text-gray-700">Datum</label>
+                        <div class="flex items-center gap-2 mt-1">
+                            <input type="date" id="emergencyDate" class="p-2 border rounded-md w-full text-gray-500">
+                            <button type="button" class="today-btn px-4 py-2 bg-gray-200 text-sm font-semibold rounded-md hover:bg-gray-300 whitespace-nowrap" data-target="emergencyDate">Heute</button>
+                        </div>
+                    </div>
                     <div><label for="emergencyMessage" class="text-sm font-medium text-gray-700">Meldung</label><input type="text" id="emergencyMessage" class="mt-1 p-2 border rounded-md w-full"></div>
                     <div>
                         <label for="emergencyStation" class="text-sm font-medium text-gray-700">Wache</label>
@@ -337,23 +356,23 @@
                              <div><label for="edit-treatmentEndDate" class="text-sm font-medium text-gray-700">Behandlungsende (optional)</label><input type="date" id="edit-treatmentEndDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
                          </div>
                      </div>
-                       <div id="edit-emergency-fields" class="space-y-4 hidden">
-                         <div><label for="edit-emergencyDate" class="text-sm font-medium text-gray-700">Datum</label><input type="date" id="edit-emergencyDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
-                         <div><label for="edit-emergencyMessage" class="text-sm font-medium text-gray-700">Meldung</label><input type="text" id="edit-emergencyMessage" class="mt-1 p-2 border rounded-md w-full"></div>
-                         <div>
-                             <label for="edit-emergencyStation" class="text-sm font-medium text-gray-700">Wache</label>
-                             <input type="text" id="edit-emergencyStation" class="mt-1 p-2 border rounded-md w-full">
-                         </div>
-                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                             <div><label for="edit-emergencyPatientDob" class="text-sm font-medium text-gray-700">Geburtsdatum Pat. (optional)</label><input type="date" id="edit-emergencyPatientDob" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
-                             <div><label for="edit-emergencyPatientName" class="text-sm font-medium text-gray-700">Name/Initialen Pat. (optional)</label><input type="text" id="edit-emergencyPatientName" class="mt-1 p-2 border rounded-md w-full"></div>
-                         </div>
-                         <div><label for="edit-emergencySuspectedDiagnosis" class="text-sm font-medium text-gray-700">Verdachtsdiagnose</label><input type="text" id="edit-emergencySuspectedDiagnosis" class="mt-1 p-2 border rounded-md w-full"></div>
-                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                             <div><label for="edit-emergencySpecialty" class="text-sm font-medium text-gray-700">Fachrichtung</label><select id="edit-emergencySpecialty" class="w-full mt-1 p-2 border rounded-md bg-white custom-select"></select></div>
-                             <div><label for="edit-emergencyCare" class="text-sm font-medium text-gray-700">Versorgung</label><select id="edit-emergencyCare" class="w-full mt-1 p-2 border rounded-md bg-white custom-select"></select></div>
-                         </div>
-                     </div>
+                      <div id="edit-emergency-fields" class="space-y-4 hidden">
+                        <div><label for="edit-emergencyDate" class="text-sm font-medium text-gray-700">Datum</label><input type="date" id="edit-emergencyDate" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                        <div><label for="edit-emergencyMessage" class="text-sm font-medium text-gray-700">Meldung</label><input type="text" id="edit-emergencyMessage" class="mt-1 p-2 border rounded-md w-full"></div>
+                        <div>
+                            <label for="edit-emergencyStation" class="text-sm font-medium text-gray-700">Wache</label>
+                            <input type="text" id="edit-emergencyStation" class="mt-1 p-2 border rounded-md w-full">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label for="edit-emergencyPatientDob" class="text-sm font-medium text-gray-700">Geburtsdatum Pat. (optional)</label><input type="date" id="edit-emergencyPatientDob" class="mt-1 p-2 border rounded-md w-full text-gray-500"></div>
+                            <div><label for="edit-emergencyPatientName" class="text-sm font-medium text-gray-700">Name/Initialen Pat. (optional)</label><input type="text" id="edit-emergencyPatientName" class="mt-1 p-2 border rounded-md w-full"></div>
+                        </div>
+                        <div><label for="edit-emergencySuspectedDiagnosis" class="text-sm font-medium text-gray-700">Verdachtsdiagnose</label><input type="text" id="edit-emergencySuspectedDiagnosis" class="mt-1 p-2 border rounded-md w-full"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label for="edit-emergencySpecialty" class="text-sm font-medium text-gray-700">Fachrichtung</label><select id="edit-emergencySpecialty" class="w-full mt-1 p-2 border rounded-md bg-white custom-select"></select></div>
+                            <div><label for="edit-emergencyCare" class="text-sm font-medium text-gray-700">Versorgung</label><select id="edit-emergencyCare" class="w-full mt-1 p-2 border rounded-md bg-white custom-select"></select></div>
+                        </div>
+                      </div>
                      
                      <div id="edit-common-fields-after" class="space-y-4">
                          <div id="edit-category-selection-anesthesia">
@@ -428,7 +447,7 @@
             apiKey: "AIzaSyBLRg7vMJ8qqhtxpR1aR6XvV9zpMLZ5QlI",
             authDomain: "narkose-tracker.firebaseapp.com",
             projectId: "narkose-tracker",
-            storageBucket: "narkose-tracker.firebasestorage.app",
+            storageBucket: "narkose-tracker.appspot.com",
             messagingSenderId: "221054080333",
             appId: "1:221054080333:web:7df83083e71a5db6275304"
         };
@@ -626,6 +645,7 @@
 
         function getPeriodDisplayHTML(period, type) {
             const fDate = (date) => date ? new Date(date + 'T00:00:00').toLocaleDateString('de-DE') : 'N/A';
+            const endDateDisplay = period.end ? fDate(period.end) : 'laufend';
             const externalFields = type === 'external' 
                 ? `<div><strong class="block text-xs text-gray-500">Anrechenbare Monate:</strong> ${period.anrechenbar || 0}</div>`
                 : '';
@@ -633,7 +653,7 @@
             return `
                 <div class="flex justify-between items-start">
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm flex-grow">
-                        <div><strong class="block text-xs text-gray-500">Zeitraum:</strong> ${fDate(period.start)} - ${fDate(period.end)}</div>
+                        <div><strong class="block text-xs text-gray-500">Zeitraum:</strong> ${fDate(period.start)} - ${endDateDisplay}</div>
                         <div><strong class="block text-xs text-gray-500">Anteil:</strong> ${period.anteil || 100}%</div>
                         <div><strong class="block text-xs text-gray-500">Abteilung:</strong> ${period.abteilung || 'N/A'}</div>
                         <div><strong class="block text-xs text-gray-500">Bevollmächtigte(r):</strong> ${period.supervisor || 'N/A'}</div>
@@ -656,12 +676,20 @@
                 ? `<div><label class="text-xs text-gray-500">Anrechenbare Monate</label><input type="number" value="${period.anrechenbar || 0}" class="p-2 border rounded-md w-full" data-field="anrechenbar" step="0.1" min="0"></div>`
                 : '';
             const gridCols = type === 'external' ? 'md:grid-cols-3' : 'md:grid-cols-2';
+            const isOngoing = !period.end;
 
             return `
                 <div class="space-y-2">
                     <div class="grid grid-cols-1 ${gridCols} gap-2">
                         <div><label class="text-xs text-gray-500">Startdatum</label><input type="date" value="${period.start || ''}" class="p-2 border rounded-md w-full" data-field="start"></div>
-                        <div><label class="text-xs text-gray-500">Enddatum</label><input type="date" value="${period.end || ''}" class="p-2 border rounded-md w-full" data-field="end"></div>
+                        <div>
+                            <label class="text-xs text-gray-500">Enddatum</label>
+                            <div class="flex items-center gap-2">
+                                <input type="date" value="${period.end || ''}" class="p-2 border rounded-md w-full" data-field="end" ${isOngoing ? 'disabled' : ''}>
+                                <input type="checkbox" class="laufend-checkbox h-4 w-4 rounded border-gray-300" ${isOngoing ? 'checked' : ''}>
+                                <label class="text-sm text-gray-600">laufend</label>
+                            </div>
+                        </div>
                         <div><label class="text-xs text-gray-500">Anteil (%)</label><input type="number" value="${period.anteil || 100}" class="p-2 border rounded-md w-full" data-field="anteil" min="1" max="100"></div>
                         ${externalInputs}
                     </div>
@@ -690,7 +718,7 @@
                         const endDate = p.end ? new Date(p.end) : today;
                         if(startDate < endDate) {
                             const diffTime = Math.abs(endDate - startDate);
-                            const diffDays = (diffTime / (1000 * 60 * 60 * 24)) + 1;
+                            const diffDays = (diffTime / (1000 * 60 * 60 * 24)) + 1; // Inclusive of end date
                             months += (diffDays / 30.4375) * ((p.anteil || 100) / 100);
                         }
                     }
@@ -715,10 +743,12 @@
 
             if (!userInfo.trainingStartDate) {
                  getElement('prognosis-end-date-display').textContent = "Startdatum fehlt";
+                getElement('remaining-months-display').textContent = "--";
                  return;
             }
 
             const remainingMonths = Math.max(0, totalRequiredMonths - completedMonths);
+            getElement('remaining-months-display').textContent = remainingMonths.toFixed(1);
             if (remainingMonths > 0) {
                 let prognosisDate = new Date(); 
                 prognosisDate.setMonth(prognosisDate.getMonth() + remainingMonths);
@@ -827,7 +857,14 @@
                 emergencySummary.dataset.catId = 'emergency-summary';
 
                 let tableRows = emergencyMissions
-                    .sort((a,b) => new Date(b.date) - new Date(a.date))
+                    .sort((a, b) => {
+                        const dateA = a.date ? new Date(a.date).getTime() : 0;
+                        const dateB = b.date ? new Date(b.date).getTime() : 0;
+                        if (dateB !== dateA) return dateB - dateA;
+                        const creationA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                        const creationB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                        return creationB - creationA;
+                    })
                     .map(p => {
                         const fDate = (date) => date ? new Date(date+'T00:00:00').toLocaleDateString('de-DE') : 'N/A';
                         return `
@@ -1076,7 +1113,38 @@
             if (patientList.length === 0) { 
                 body.innerHTML = '<p class="text-gray-600">Keine Fälle für diese Kategorie erfasst.</p>'; 
             } else {
-                body.innerHTML = `<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Datum/Zeitraum</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Fall-ID</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Diagnose/OP</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Kommentar</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Aktion</th></tr></thead><tbody class="bg-white divide-y">${patientList.sort((a,b) => new Date(b.dateOfAnesthesia || b.treatmentEndDate) - new Date(a.dateOfAnesthesia || a.treatmentEndDate)).map(p => `<tr><td class="px-6 py-4 whitespace-nowrap text-sm">${p.caseType === 'anesthesia' ? (p.dateOfAnesthesia ? new Date(p.dateOfAnesthesia+'T00:00:00').toLocaleDateString('de-DE') : 'N/A') : `${p.treatmentStartDate ? new Date(p.treatmentStartDate+'T00:00:00').toLocaleDateString('de-DE') : 'N/A'} - ${p.treatmentEndDate ? new Date(p.treatmentEndDate+'T00:00:00').toLocaleDateString('de-DE') : 'laufend'}`}</td><td class="px-6 py-4 whitespace-nowrap text-sm">${p.caseId}</td><td class="px-6 py-4 text-sm"><div class="font-semibold">${p.operation || p.diagnosis || ''}</div><div class="text-gray-500">${p.operation ? p.diagnosis : ''}</div></td><td class="px-6 py-4 text-sm">${p.comments || ''}</td><td class="px-6 py-4 whitespace-nowrap text-sm"><button class="edit-case-btn text-indigo-600 hover:text-indigo-900 font-semibold" data-case-id="${p.id}">Bearbeiten</button></td></tr>`).join('')}</tbody></table></div>`;
+                const getCaseDateString = (p) => {
+                    const fDate = (d) => new Date(d + 'T00:00:00').toLocaleDateString('de-DE');
+                    if (p.caseType === 'anesthesia') return p.dateOfAnesthesia ? fDate(p.dateOfAnesthesia) : 'N/A';
+                    if (p.caseType === 'intensive') {
+                        const start = p.treatmentStartDate ? fDate(p.treatmentStartDate) : 'N/A';
+                        const end = p.treatmentEndDate ? fDate(p.treatmentEndDate) : 'laufend';
+                        return `${start} - ${end}`;
+                    }
+                    if (p.caseType === 'emergency') return p.date ? fDate(p.date) : 'N/A';
+                    // Fallback for older data
+                    if (p.dateOfAnesthesia) return fDate(p.dateOfAnesthesia);
+                    return 'N/A';
+                };
+
+                const getCaseDateForSort = (p) => {
+                    const dateStr = p.dateOfAnesthesia || p.treatmentStartDate || p.date;
+                    if (!dateStr) return 0;
+                    const date = new Date(dateStr);
+                    return isNaN(date.getTime()) ? 0 : date.getTime();
+                };
+
+                const sortedList = patientList.sort((a, b) => {
+                    const dateA = getCaseDateForSort(a);
+                    const dateB = getCaseDateForSort(b);
+                    if (dateB !== dateA) return dateB - dateA;
+                    
+                    const creationA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                    const creationB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                    return creationB - creationA;
+                });
+
+                body.innerHTML = `<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Datum/Zeitraum</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Fall-ID</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Diagnose/OP</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Kommentar</th><th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Aktion</th></tr></thead><tbody class="bg-white divide-y">${sortedList.map(p => `<tr><td class="px-6 py-4 whitespace-nowrap text-sm">${getCaseDateString(p)}</td><td class="px-6 py-4 whitespace-nowrap text-sm">${p.caseId}</td><td class="px-6 py-4 text-sm"><div class="font-semibold">${p.operation || p.diagnosis || ''}</div><div class="text-gray-500">${p.operation ? p.diagnosis : ''}</div></td><td class="px-6 py-4 text-sm">${p.comments || ''}</td><td class="px-6 py-4 whitespace-nowrap text-sm"><button class="edit-case-btn text-indigo-600 hover:text-indigo-900 font-semibold" data-case-id="${p.id}">Bearbeiten</button></td></tr>`).join('')}</tbody></table></div>`;
             }
             openModal(getElement('patient-modal'));
         }
@@ -1208,37 +1276,87 @@
 
         function exportAnesthesiaCasesAsCSV() {
             const headers = ["Datum", "Fall-ID", "Operation", "Diagnose", "Patienten-Geb.", "Kategorien", "Kommentare"];
-            const anesthesiaCases = patients.filter(p => p.caseType === 'anesthesia');
+            const anesthesiaCases = patients.filter(p => p.caseType === 'anesthesia' || (!p.caseType && p.dateOfAnesthesia));
             
             if (anesthesiaCases.length === 0) {
                 showCustomMessage("Information", "Es sind keine Narkose-Fälle zum Exportieren vorhanden.");
                 return;
             }
 
-            const rows = anesthesiaCases
-                .sort((a,b) => new Date(b.dateOfAnesthesia) - new Date(a.dateOfAnesthesia))
-                .map(p => {
-                    const escape = (str) => `"${(str || '').toString().replace(/"/g, '""')}"`;
-                    const fDate = (date) => date ? new Date(date+'T00:00:00').toLocaleDateString('de-DE') : '';
-                    return [
+            const csvRows = [headers.join(',')];
+
+            const sortedCases = anesthesiaCases.sort((a, b) => {
+                const parseDate = (dateStr) => {
+                    if (!dateStr || typeof dateStr !== 'string') return null;
+                    const date = new Date(dateStr);
+                    return isNaN(date.getTime()) ? null : date.getTime();
+                };
+                const timeA = parseDate(a.dateOfAnesthesia);
+                const timeB = parseDate(b.dateOfAnesthesia);
+                if (timeB !== timeA) {
+                    if (timeA === null) return 1;
+                    if (timeB === null) return -1;
+                    return timeB - timeA;
+                }
+                const creationA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const creationB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                return creationB - creationA;
+            });
+
+            for (const p of sortedCases) {
+                try {
+                    const escape = (str) => {
+                        let s = (str === null || str === undefined) ? '' : String(str);
+                        s = s.replace(/(\r\n|\n|\r)/gm, ' ').replace(/"/g, '""');
+                        return `"${s}"`;
+                    };
+
+                    const fDate = (date) => {
+                        if (!date) return '';
+                        // Use UTC methods to avoid timezone issues when parsing YYYY-MM-DD
+                        const d = new Date(date + 'T00:00:00Z');
+                        if (isNaN(d.getTime())) return '';
+                        const day = String(d.getUTCDate()).padStart(2, '0');
+                        const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+                        const year = d.getUTCFullYear();
+                        return `${day}.${month}.${year}`;
+                    };
+
+                    const categoriesText = (Array.isArray(p.categories) ? p.categories : [])
+                        .map(id => getItemById(id)?.name)
+                        .filter(Boolean)
+                        .join('; ');
+
+                    const row = [
                         fDate(p.dateOfAnesthesia),
                         escape(p.caseId),
                         escape(p.operation),
                         escape(p.diagnosis),
                         fDate(p.dob),
-                        escape((p.categories || []).map(id => getItemById(id)?.name).join('; ')),
+                        escape(categoriesText),
                         escape(p.comments)
                     ].join(',');
-                });
+                    csvRows.push(row);
 
-            const csvContent = "data:text/csv;charset=utf-8," + [headers.join(',')].concat(rows).join('\r\n');
-            const encodedUri = encodeURI(csvContent);
+                } catch (error) {
+                    console.error("Fehler bei der Verarbeitung eines Falls für den CSV-Export:", p, error);
+                    const errorRow = [`"FEHLER"`, `"Fall-ID: ${p.id || 'Unbekannt'}"`, `"Konnte nicht verarbeitet werden"`, `""`, `""`, `""`, `""`].join(',');
+                    csvRows.push(errorRow);
+                }
+            }
+            
+            // Using a Blob for robust file creation
+            const csvString = csvRows.join('\r\n');
+            const blob = new Blob(["\uFEFF" + csvString], { type: 'text/csv;charset=utf-8;' });
+            
             const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
             link.setAttribute("download", `Narkosen_Export_${new Date().toISOString().slice(0, 10)}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
 
         function exportIntensiveCasesAsCSV() {
@@ -1251,7 +1369,14 @@
             }
 
             const rows = intensiveCases
-                .sort((a,b) => new Date(b.treatmentStartDate) - new Date(a.treatmentStartDate))
+                .sort((a,b) => {
+                    const dateA = a.treatmentStartDate ? new Date(a.treatmentStartDate).getTime() : 0;
+                    const dateB = b.treatmentStartDate ? new Date(b.treatmentStartDate).getTime() : 0;
+                    if (dateB !== dateA) return dateB - dateA;
+                    const creationA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                    const creationB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                    return creationB - creationA;
+                })
                 .map(p => {
                     const escape = (str) => `"${(str || '').toString().replace(/"/g, '""')}"`;
                     const fDate = (date) => date ? new Date(date+'T00:00:00').toLocaleDateString('de-DE') : '';
@@ -1285,7 +1410,14 @@
             }
 
             const rows = missions
-                .sort((a,b) => new Date(b.date) - new Date(a.date))
+                .sort((a,b) => {
+                    const dateA = a.date ? new Date(a.date).getTime() : 0;
+                    const dateB = b.date ? new Date(b.date).getTime() : 0;
+                    if (dateB !== dateA) return dateB - dateA;
+                    const creationA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                    const creationB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                    return creationB - creationA;
+                })
                 .map(p => {
                     const escape = (str) => `"${(str || '').toString().replace(/"/g, '""')}"`;
                     const fDate = (date) => date ? new Date(date+'T00:00:00').toLocaleDateString('de-DE') : '';
@@ -1524,10 +1656,37 @@
                     });
             });
 
+            document.getElementById('add-patient-form').addEventListener('click', (e) => {
+                if (e.target.classList.contains('today-btn')) {
+                    const targetInputId = e.target.dataset.target;
+                    if (targetInputId) {
+                        const today = new Date();
+                        const year = today.getFullYear();
+                        const month = String(today.getMonth() + 1).padStart(2, '0');
+                        const day = String(today.getDate()).padStart(2, '0');
+                        document.getElementById(targetInputId).value = `${year}-${month}-${day}`;
+                    }
+                }
+            });
+
             getElement('training-start-date').addEventListener('change', () => { 
                 userInfo.trainingStartDate = getElement('training-start-date').value;
                 saveData(); 
             });
+
+            getElement('training-history-content').addEventListener('input', e => {
+                if (e.target.classList.contains('laufend-checkbox')) {
+                    const checkbox = e.target;
+                    const endDateInput = checkbox.closest('.flex').querySelector('input[data-field="end"]');
+                    if (endDateInput) {
+                        endDateInput.disabled = checkbox.checked;
+                        if (checkbox.checked) {
+                            endDateInput.value = '';
+                        }
+                    }
+                }
+            });
+
 
             getElement('training-history-content').addEventListener('click', e => {
                 const target = e.target.closest('button');
@@ -1671,6 +1830,7 @@
                 
                 const patientData = { 
                     id: crypto.randomUUID(), 
+                    createdAt: new Date().toISOString(),
                     caseType: currentCaseType, 
                     comments: getElement('comments').value.trim(),
                     categories: [] // Initialize categories for all cases
@@ -1758,6 +1918,7 @@
                         care: getElement('edit-emergencyCare').value
                     });
                     if (station && !userInfo.emergencyStations.includes(station)) {
+                         if (!userInfo.emergencyStations) userInfo.emergencyStations = [];
                         userInfo.emergencyStations.push(station);
                     }
                 }
@@ -1784,12 +1945,7 @@
                             saveData();
                             closeModal(getElement('edit-case-modal'));
                             if (lastOpenedItemId) {
-                                // Refresh the details modal if it was open
-                                const item = getItemById(lastOpenedItemId);
-                                // Check if the item still exists (it should)
-                                if (item) {
-                                    showPatientModal(lastOpenedItemId);
-                                }
+                                showPatientModal(lastOpenedItemId);
                             }
                             showCustomMessage("Erfolg", "Fall wurde gelöscht.");
                         }
@@ -1880,6 +2036,7 @@
                 }
             
                 if (!isMainHeader) {
+                    // Adjust parent height if a sub-item is opened/closed
                     const mainContent = header.closest('.card > .collapsible-content');
                     if (mainContent && mainContent.style.maxHeight) { 
                         setTimeout(() => {
@@ -1903,4 +2060,11 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
 
