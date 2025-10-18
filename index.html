@@ -531,21 +531,6 @@
 
         const emailJsModulePromise = bugReportNotificationConfig.email.enabled
             ? import('https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js')
-                .then((module) => {
-                    const emailjs = module?.default || module;
-                    if (emailjs?.init && bugReportNotificationConfig.email.publicKey) {
-                        try {
-                            emailjs.init(bugReportNotificationConfig.email.publicKey);
-                        } catch (initError) {
-                            console.error('EmailJS konnte nicht initialisiert werden:', initError);
-                        }
-                    }
-                    return emailjs;
-                })
-                .catch((loadError) => {
-                    console.error('EmailJS konnte nicht geladen werden:', loadError);
-                    return null;
-                })
             : Promise.resolve(null);
 
         const categoriesData = [
@@ -1608,7 +1593,8 @@
 
                 if (bugReportNotificationConfig.email.enabled) {
                     try {
-                        const emailjs = await emailJsModulePromise;
+                        const emailJsModule = await emailJsModulePromise;
+                        const emailjs = emailJsModule?.default || emailJsModule;
 
                         if (!emailjs || !bugReportNotificationConfig.email.serviceId || !bugReportNotificationConfig.email.templateId || !bugReportNotificationConfig.email.publicKey) {
                             throw new Error('EmailJS ist nicht vollständig konfiguriert.');
@@ -1691,54 +1677,26 @@
 
                     try {
                         const submittedAt = new Date();
-                        let firestoreDocId = null;
-                        let storageError = null;
-                        try {
-                            const docRef = await addDoc(bugReportCollectionRef, {
-                                summary,
-                                details: details || null,
-                                environment: environment || null,
-                                userId: currentUserId,
-                                userEmail: auth.currentUser ? auth.currentUser.email : null,
-                                createdAt: serverTimestamp(),
-                            });
-                            firestoreDocId = docRef.id;
-                        } catch (firestoreError) {
-                            storageError = firestoreError;
-                            console.error('Fehler beim Speichern des Bug-Reports in Firestore:', firestoreError);
-                        }
-
-                        let notificationErrors = [];
-                        try {
-                            notificationErrors = await notifyBugReportSubmission({
-                                summary,
-                                details: details || '—',
-                                environment: environment || '—',
-                                userEmail: auth.currentUser ? auth.currentUser.email : null,
-                                userId: currentUserId,
-                                submittedAt,
-                            });
-                        } catch (notificationError) {
-                            console.error('Unerwarteter Fehler bei Bug-Report-Benachrichtigungen:', notificationError);
-                            notificationErrors.push('Benachrichtigung fehlgeschlagen.');
-                        }
-
-                        const notificationsAttempted = bugReportNotificationConfig.email.enabled || bugReportNotificationConfig.github.enabled;
-                        const storageSucceeded = Boolean(firestoreDocId);
-                        const notificationsSucceeded = !notificationsAttempted || notificationErrors.length === 0;
-
-                        if (!storageSucceeded && !notificationsSucceeded) {
-                            throw storageError || new Error('Bug-Report konnte nicht verarbeitet werden.');
-                        }
-
+                        await addDoc(bugReportCollectionRef, {
+                            summary,
+                            details: details || null,
+                            environment: environment || null,
+                            userId: currentUserId,
+                            userEmail: auth.currentUser ? auth.currentUser.email : null,
+                            createdAt: serverTimestamp(),
+                        });
+                        const notificationErrors = await notifyBugReportSubmission({
+                            summary,
+                            details: details || '—',
+                            environment: environment || '—',
+                            userEmail: auth.currentUser ? auth.currentUser.email : null,
+                            userId: currentUserId,
+                            submittedAt,
+                        });
                         if (bugReportModal) {
                             closeModal(bugReportModal);
                         }
-                        resetBugReportForm();
                         showCustomMessage('Danke!', 'Ihr Fehlerbericht wurde übermittelt.');
-                        if (!storageSucceeded) {
-                            showCustomMessage('Hinweis', 'Der Fehlerbericht konnte nicht automatisch gespeichert werden, die Benachrichtigung wurde jedoch gesendet.');
-                        }
                         if (notificationErrors.length) {
                             showCustomMessage('Hinweis', notificationErrors.join(' '));
                         }
