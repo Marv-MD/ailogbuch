@@ -2074,7 +2074,16 @@
             });
 
         });
-
+<!-- Ganz am Ende deiner index.html einfügen -->
+<!-- Bug-Report Bereich laden -->
+<div id="bug-report-container"></div>
+<script>
+  fetch('bug-report.html')
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById('bug-report-container').innerHTML = html;
+    });
+</script>
     </script>
 </body>
 </html>
