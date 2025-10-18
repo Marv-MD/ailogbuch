@@ -1,6 +1,6 @@
 // sw.js - Robuster Service Worker für Offline-Fähigkeit
 
-const CACHE_NAME = 'ai-logbuch-cache-v14';
+const CACHE_NAME = 'ai-logbuch-cache-v15';
 
 // Wesentliche lokale App-Dateien, die immer funktionieren müssen.
 const CORE_ASSETS = [
