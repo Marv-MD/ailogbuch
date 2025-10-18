@@ -2074,32 +2074,11 @@
             });
 
         });
-<!-- ...dein bisheriger Inhalt... -->
-
-<!-- Bug-Report Bereich (am Seitenende platzieren) -->
-<section id="bug-report" style="padding:2em;background:#f8f8f8;border-top:1px solid #ddd;margin-top:2em;">
-  <h2>🐞 Bug melden</h2>
-  <form id="bugReportForm">
-    <label>
-      Titel:<br>
-      <input type="text" name="title" required>
-    </label><br><br>
-    <label>
-      Beschreibung:<br>
-      <textarea name="description" rows="5" required></textarea>
-    </label><br><br>
-    <label>
-      Deine E-Mail (für Rückfragen):<br>
-      <input type="email" name="reporter" required>
-    </label><br><br>
-    <button type="submit">Bug melden</button>
-  </form>
-  <div id="bugReportStatus" style="margin-top:1em;color:green;"></div>
-</section>
-
+<!-- EmailJS Library zuerst! -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
+<!-- Dann dein eigenes Skript -->
 <script>
-  // EmailJS initialisieren
   emailjs.init('PIkve0yxBKuIHgFSB');
 
   document.getElementById('bugReportForm').addEventListener('submit', async function(e) {
@@ -2113,7 +2092,6 @@
     status.style.color = 'gray';
     status.textContent = 'Wird gesendet ...';
 
-    // E-Mail versenden
     try {
       await emailjs.send('service_9z4i0xk', 'template_rmizoxk', {
         title, description, reporter,
@@ -2128,7 +2106,6 @@
     }
   });
 </script>
-<!-- ...schließendes </body> und </html> -->
 </body>
 </html>
 
