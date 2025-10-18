@@ -529,9 +529,16 @@
             },
         };
 
-        const emailJsModulePromise = bugReportNotificationConfig.email.enabled
-            ? import('https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js')
-            : Promise.resolve(null);
+       const emailJsModulePromise = bugReportNotificationConfig.email.enabled
+  ? new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
+      s.onload = () => resolve(window.emailjs);
+      s.onerror = reject;
+      document.head.appendChild(s);
+    })
+  : Promise.resolve(null);
+
 
         const categoriesData = [
             { id: "anaesthesia_general", displayCategory: "Allgemeine Anästhesien", type: "wbo", colorClasses: "bg-blue-100 text-blue-800", items: [ { id: "anaesthesieverfahren_gesamt", name: "Durchführung von Anästhesieverfahren", target: 1800 }, { id: "abdominelle_eingriffe", name: "davon bei abdominellen Eingriffen", target: 300, parent: "anaesthesieverfahren_gesamt" }, { id: "asa_3_plus", name: "davon bei Patienten mit mindestens ASA 3-Klassifikation", target: 100, parent: "anaesthesieverfahren_gesamt" }, ]},
@@ -1593,26 +1600,22 @@
 
                 if (bugReportNotificationConfig.email.enabled) {
                     try {
-                        const emailJsModule = await emailJsModulePromise;
-                        const emailjs = emailJsModule?.default || emailJsModule;
+                        const emailjs = await emailJsModulePromise; // <-- globales Objekt
+if (!emailjs) throw new Error('EmailJS ist nicht geladen.');
+await emailjs.send(
+  bugReportNotificationConfig.email.serviceId,
+  bugReportNotificationConfig.email.templateId,
+  {
+    summary,
+    details,
+    environment,
+    user_email: userEmail || 'unbekannt',
+    user_id: userId || 'unbekannt',
+    submitted_at: submittedAt.toLocaleString('de-DE'),
+  },
+  bugReportNotificationConfig.email.publicKey
+);
 
-                        if (!emailjs || !bugReportNotificationConfig.email.serviceId || !bugReportNotificationConfig.email.templateId || !bugReportNotificationConfig.email.publicKey) {
-                            throw new Error('EmailJS ist nicht vollständig konfiguriert.');
-                        }
-
-                        await emailjs.send(
-                            bugReportNotificationConfig.email.serviceId,
-                            bugReportNotificationConfig.email.templateId,
-                            {
-                                summary,
-                                details,
-                                environment,
-                                user_email: userEmail || 'unbekannt',
-                                user_id: userId || 'unbekannt',
-                                submitted_at: submittedAt.toLocaleString('de-DE'),
-                            },
-                            bugReportNotificationConfig.email.publicKey,
-                        );
                     } catch (emailError) {
                         console.error('Fehler beim Versenden der Bug-Report-E-Mail:', emailError);
                         notificationErrors.push('E-Mail-Benachrichtigung fehlgeschlagen.');
