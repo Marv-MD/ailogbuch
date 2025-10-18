@@ -48,6 +48,13 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const { request } = event;
 
+  // Nicht in den Cache eingreifen, wenn es sich nicht um eine GET-Anfrage handelt.
+  // Dadurch können POST-, PUT- oder DELETE-Requests (z. B. Firestore oder EmailJS)
+  // ungehindert direkt ins Netzwerk gehen.
+  if (request.method !== 'GET') {
+    return;
+  }
+
   // Für Navigationsanfragen (HTML-Seite) -> "Network falling back to cache"
   // Stellt sicher, dass der Benutzer immer die neueste Version der App sieht, wenn online.
   if (request.mode === 'navigate') {

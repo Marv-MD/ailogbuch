@@ -297,6 +297,7 @@
                     <button id="export-emergency-btn" class="w-full sm:w-auto bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700">Notfalleinsätze exportieren (CSV)</button>
                     <button id="export-data-btn" class="w-full sm:w-auto bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">Backup exportieren</button>
                     <button id="import-data-btn" class="w-full sm:w-auto bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600">Backup importieren</button>
+                    <button id="bug-report-btn" class="w-full sm:w-auto bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700">Fehler melden</button>
                     <input type="file" id="import-file-input" class="hidden" accept=".json">
                 </div>
                 <p class="mt-4 text-xs text-gray-500">Exportieren Sie Ihr Logbuch als CSV-Datei zum Ausdrucken oder erstellen Sie ein JSON-Backup Ihrer App-Daten.</p>
@@ -331,7 +332,31 @@
             <div class="p-6"><p id="custom-message-text" class="mb-4 text-gray-700"></p><div id="custom-message-buttons" class="flex justify-end space-x-2"><button id="custom-message-ok-btn" class="px-4 py-2 bg-blue-500 text-white font-bold rounded-md hover:bg-blue-600">OK</button><button id="custom-message-cancel-btn" class="px-4 py-2 bg-gray-300 text-gray-800 font-bold rounded-md hover:bg-gray-400 hidden">Abbrechen</button></div></div>
         </div>
     </div>
-    
+
+    <div id="bug-report-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0 z-[100]">
+        <div class="modal-content bg-white rounded-lg shadow-xl max-w-lg w-full transform scale-95">
+            <div class="p-4 border-b flex justify-between items-center"><h3 class="text-xl font-bold">Fehler melden</h3><button id="bug-report-close-btn" class="text-2xl font-bold">&times;</button></div>
+            <div class="p-6">
+                <form id="bug-report-form" class="space-y-4">
+                    <div>
+                        <label for="bug-report-summary" class="block text-sm font-medium text-gray-700">Kurze Beschreibung *</label>
+                        <input type="text" id="bug-report-summary" class="mt-1 p-2 border rounded-md w-full" maxlength="200" required>
+                    </div>
+                    <div>
+                        <label for="bug-report-details" class="block text-sm font-medium text-gray-700">Details (optional)</label>
+                        <textarea id="bug-report-details" class="mt-1 p-2 border rounded-md w-full" rows="4" placeholder="Was ist passiert? Wie kann der Fehler reproduziert werden?"></textarea>
+                    </div>
+                    <div>
+                        <label for="bug-report-environment" class="block text-sm font-medium text-gray-700">Browser/Version (optional)</label>
+                        <input type="text" id="bug-report-environment" class="mt-1 p-2 border rounded-md w-full" placeholder="z. B. Chrome 125 auf Windows">
+                    </div>
+                    <p id="bug-report-error" class="text-sm text-red-600 hidden"></p>
+                    <button id="bug-report-submit-btn" type="submit" class="w-full bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700">Absenden</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Fall bearbeiten Modal -->
     <div id="edit-case-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0 z-50">
         <div class="modal-content bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col transform scale-95">
@@ -442,7 +467,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, setDoc, enableIndexedDbPersistence, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         // --- Firebase Init ---
         const firebaseConfig = {
@@ -486,6 +511,42 @@
         let tempRegionalDetails = null;
         let collapsibleStates = {}; // Zustand der Menüs speichern
         let isInitialLoad = true; // Flag für den ersten Ladevorgang
+
+        // Konfiguration für optionale Benachrichtigungen bei neuen Fehlermeldungen.
+        const bugReportNotificationConfig = {
+            email: {
+                enabled: true,
+                serviceId: 'service_9z4i0xk',
+                templateId: 'template_rmizoxk',
+                publicKey: 'PIkve0yxBKuIHgFSB',
+            },
+            github: {
+                enabled: false,
+                repoOwner: '',
+                repoName: '',
+                labelNames: ['bug'],
+                // Hinweis: Für GitHub-Issues wird eine sichere serverseitige Weiterleitung benötigt.
+            },
+        };
+
+        const emailJsModulePromise = bugReportNotificationConfig.email.enabled
+            ? import('https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js')
+                .then((module) => {
+                    const emailjs = module?.default || module;
+                    if (emailjs?.init && bugReportNotificationConfig.email.publicKey) {
+                        try {
+                            emailjs.init(bugReportNotificationConfig.email.publicKey);
+                        } catch (initError) {
+                            console.error('EmailJS konnte nicht initialisiert werden:', initError);
+                        }
+                    }
+                    return emailjs;
+                })
+                .catch((loadError) => {
+                    console.error('EmailJS konnte nicht geladen werden:', loadError);
+                    return null;
+                })
+            : Promise.resolve(null);
 
         const categoriesData = [
             { id: "anaesthesia_general", displayCategory: "Allgemeine Anästhesien", type: "wbo", colorClasses: "bg-blue-100 text-blue-800", items: [ { id: "anaesthesieverfahren_gesamt", name: "Durchführung von Anästhesieverfahren", target: 1800 }, { id: "abdominelle_eingriffe", name: "davon bei abdominellen Eingriffen", target: 300, parent: "anaesthesieverfahren_gesamt" }, { id: "asa_3_plus", name: "davon bei Patienten mit mindestens ASA 3-Klassifikation", target: 100, parent: "anaesthesieverfahren_gesamt" }, ]},
@@ -1537,6 +1598,165 @@
             populateEmergencyDropdowns(getElement('emergencySpecialty'), getElement('emergencyCare'));
             populateEmergencyDropdowns(getElement('edit-emergencySpecialty'), getElement('edit-emergencyCare'));
 
+            const bugReportModal = getElement('bug-report-modal');
+            const bugReportForm = getElement('bug-report-form');
+            const bugReportError = getElement('bug-report-error');
+            const bugReportSubmitBtn = getElement('bug-report-submit-btn');
+            const bugReportCollectionRef = collection(db, 'bugReports');
+            const notifyBugReportSubmission = async ({ summary, details, environment, userEmail, userId, submittedAt }) => {
+                const notificationErrors = [];
+
+                if (bugReportNotificationConfig.email.enabled) {
+                    try {
+                        const emailjs = await emailJsModulePromise;
+
+                        if (!emailjs || !bugReportNotificationConfig.email.serviceId || !bugReportNotificationConfig.email.templateId || !bugReportNotificationConfig.email.publicKey) {
+                            throw new Error('EmailJS ist nicht vollständig konfiguriert.');
+                        }
+
+                        await emailjs.send(
+                            bugReportNotificationConfig.email.serviceId,
+                            bugReportNotificationConfig.email.templateId,
+                            {
+                                summary,
+                                details,
+                                environment,
+                                user_email: userEmail || 'unbekannt',
+                                user_id: userId || 'unbekannt',
+                                submitted_at: submittedAt.toLocaleString('de-DE'),
+                            },
+                            bugReportNotificationConfig.email.publicKey,
+                        );
+                    } catch (emailError) {
+                        console.error('Fehler beim Versenden der Bug-Report-E-Mail:', emailError);
+                        notificationErrors.push('E-Mail-Benachrichtigung fehlgeschlagen.');
+                    }
+                }
+
+                if (bugReportNotificationConfig.github.enabled) {
+                    console.warn('GitHub-Issue-Erstellung erfordert eine serverseitige Weiterleitung, um Tokens sicher zu halten.');
+                }
+
+                return notificationErrors;
+            };
+
+            const resetBugReportForm = () => {
+                if (!bugReportForm) return;
+                bugReportForm.reset();
+                if (bugReportError) {
+                    bugReportError.textContent = '';
+                    bugReportError.classList.add('hidden');
+                }
+                if (bugReportSubmitBtn) {
+                    bugReportSubmitBtn.disabled = false;
+                    bugReportSubmitBtn.textContent = 'Absenden';
+                }
+            };
+
+            const bugReportButton = getElement('bug-report-btn');
+            if (bugReportButton && bugReportModal) {
+                bugReportButton.addEventListener('click', () => {
+                    resetBugReportForm();
+                    openModal(bugReportModal);
+                    const summaryField = getElement('bug-report-summary');
+                    if (summaryField) summaryField.focus();
+                });
+            }
+
+            if (bugReportForm) {
+                bugReportForm.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+
+                    const summary = getElement('bug-report-summary').value.trim();
+                    const details = getElement('bug-report-details').value.trim();
+                    const environment = getElement('bug-report-environment').value.trim();
+
+                    if (!summary) {
+                        if (bugReportError) {
+                            bugReportError.textContent = 'Bitte geben Sie eine kurze Beschreibung ein.';
+                            bugReportError.classList.remove('hidden');
+                        }
+                        return;
+                    }
+
+                    if (bugReportError) {
+                        bugReportError.classList.add('hidden');
+                        bugReportError.textContent = '';
+                    }
+
+                    if (bugReportSubmitBtn) {
+                        bugReportSubmitBtn.disabled = true;
+                        bugReportSubmitBtn.textContent = 'Wird gesendet...';
+                    }
+
+                    try {
+                        const submittedAt = new Date();
+                        let firestoreDocId = null;
+                        let storageError = null;
+                        try {
+                            const docRef = await addDoc(bugReportCollectionRef, {
+                                summary,
+                                details: details || null,
+                                environment: environment || null,
+                                userId: currentUserId,
+                                userEmail: auth.currentUser ? auth.currentUser.email : null,
+                                createdAt: serverTimestamp(),
+                            });
+                            firestoreDocId = docRef.id;
+                        } catch (firestoreError) {
+                            storageError = firestoreError;
+                            console.error('Fehler beim Speichern des Bug-Reports in Firestore:', firestoreError);
+                        }
+
+                        let notificationErrors = [];
+                        try {
+                            notificationErrors = await notifyBugReportSubmission({
+                                summary,
+                                details: details || '—',
+                                environment: environment || '—',
+                                userEmail: auth.currentUser ? auth.currentUser.email : null,
+                                userId: currentUserId,
+                                submittedAt,
+                            });
+                        } catch (notificationError) {
+                            console.error('Unerwarteter Fehler bei Bug-Report-Benachrichtigungen:', notificationError);
+                            notificationErrors.push('Benachrichtigung fehlgeschlagen.');
+                        }
+
+                        const notificationsAttempted = bugReportNotificationConfig.email.enabled || bugReportNotificationConfig.github.enabled;
+                        const storageSucceeded = Boolean(firestoreDocId);
+                        const notificationsSucceeded = !notificationsAttempted || notificationErrors.length === 0;
+
+                        if (!storageSucceeded && !notificationsSucceeded) {
+                            throw storageError || new Error('Bug-Report konnte nicht verarbeitet werden.');
+                        }
+
+                        if (bugReportModal) {
+                            closeModal(bugReportModal);
+                        }
+                        resetBugReportForm();
+                        showCustomMessage('Danke!', 'Ihr Fehlerbericht wurde übermittelt.');
+                        if (!storageSucceeded) {
+                            showCustomMessage('Hinweis', 'Der Fehlerbericht konnte nicht automatisch gespeichert werden, die Benachrichtigung wurde jedoch gesendet.');
+                        }
+                        if (notificationErrors.length) {
+                            showCustomMessage('Hinweis', notificationErrors.join(' '));
+                        }
+                    } catch (error) {
+                        console.error('Fehler beim Senden des Bug-Reports:', error);
+                        if (bugReportError) {
+                            bugReportError.textContent = 'Der Fehlerbericht konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.';
+                            bugReportError.classList.remove('hidden');
+                        }
+                    } finally {
+                        if (bugReportSubmitBtn) {
+                            bugReportSubmitBtn.disabled = false;
+                            bugReportSubmitBtn.textContent = 'Absenden';
+                        }
+                    }
+                });
+            }
+
             onAuthStateChanged(auth, user => {
                 const loadingOverlay = getElement('loading-overlay');
                 const authContainer = getElement('auth-container');
@@ -1546,7 +1766,7 @@
                 if (user) {
                     currentUserId = user.uid;
                     getElement('user-email-display').textContent = user.email;
-                    
+
                     unsubscribe = onSnapshot(doc(db, "users", currentUserId), (docSnap) => {
                         saveCollapsibleStates();
                         const defaultUserInfo = { doctorName: '', doctorDob: '', clinic: '', supervisor: '', trainingStartDate: '', trainingInstitutions: [], externalPeriods: [], emergencyStations: [] };
@@ -1600,7 +1820,7 @@
                 } else {
                     currentUserId = null;
                     if (typeof unsubscribe === 'function') unsubscribe();
-                    patients = []; 
+                    patients = [];
                     userInfo = { doctorName: '', doctorDob: '', clinic: '', supervisor: '', trainingStartDate: '', trainingInstitutions: [], externalPeriods: [], emergencyStations: [] };
                     manualOffsets = {};
                     authContainer.classList.remove('hidden');
@@ -2004,7 +2224,7 @@
             getElement('import-data-btn').addEventListener('click', () => getElement('import-file-input').click());
             getElement('import-file-input').addEventListener('change', (e) => { if (!e.target.files[0]) return; const reader = new FileReader(); reader.onload = (ev) => { try { const data = JSON.parse(ev.target.result); if (data.userInfo && data.patients) { userInfo=data.userInfo; patients=data.patients; manualOffsets=data.manualOffsets||{}; saveData(); showCustomMessage("Import erfolgreich", "Daten importiert."); } else { showCustomMessage("Fehler", "Ungültiges Format."); }} catch { showCustomMessage("Fehler", "Datei konnte nicht gelesen werden."); }}; reader.readAsText(e.target.files[0]); e.target.value = ''; });
             getElement('reset-button').addEventListener('click', () => { showCustomMessage("Daten zurücksetzen?", "Alle Fälle und Korrekturen werden gelöscht.", 'confirm', (ok) => { if(ok) { patients=[]; manualOffsets={}; saveData(); }}); });
-            ['user-info-modal', 'patient-modal', 'offset-edit-modal', 'custom-message-modal', 'edit-case-modal', 'regional-anaesthesia-modal', 'input-modal'].forEach(id => { const modal = getElement(id); modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); }); modal.querySelector('button[id$="-close-btn"]').addEventListener('click', () => closeModal(modal)); });
+            ['user-info-modal', 'patient-modal', 'offset-edit-modal', 'custom-message-modal', 'bug-report-modal', 'edit-case-modal', 'regional-anaesthesia-modal', 'input-modal'].forEach(id => { const modal = getElement(id); modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); }); modal.querySelector('button[id$="-close-btn"]').addEventListener('click', () => closeModal(modal)); });
             
             getElement('save-regional-anaesthesia-btn').addEventListener('click', () => {
                 const prefix = regionalAnaesthesiaContext.formPrefix;
