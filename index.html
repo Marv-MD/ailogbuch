@@ -129,9 +129,19 @@
 
     <!-- Haupt-Anwendungs-UI -->
     <div id="app-container" class="hidden container mx-auto p-4 md:p-8 max-w-5xl">
-        <header class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">A&I-Logbuch</h1>
-            <p class="text-md text-gray-600 mt-2">Facharzt Anästhesiologie (WBO 2021 Ärztekammer des Saarlandes)</p>
+        <header class="mb-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-center md:text-left">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold text-gray-900">A&I-Logbuch</h1>
+                    <p class="text-md text-gray-600 mt-2">Facharzt Anästhesiologie (WBO 2021 Ärztekammer des Saarlandes)</p>
+                </div>
+                <button id="share-app-btn" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                        <path d="M18 8a3 3 0 10-2.815-4.088l-7.108 3.553a3 3 0 100 4.07l7.108 3.553a3.002 3.002 0 102.055-.974l-7.108-3.553a3.026 3.026 0 000-1.122l7.108-3.553A2.99 2.99 0 0018 8z" />
+                    </svg>
+                    App teilen
+                </button>
+            </div>
         </header>
         
         <div class="card p-4 md:p-6 mb-8">
@@ -511,6 +521,8 @@
         let tempRegionalDetails = null;
         let collapsibleStates = {}; // Zustand der Menüs speichern
         let isInitialLoad = true; // Flag für den ersten Ladevorgang
+
+        const APP_SHARE_URL = 'https://marv-md.github.io/ailogbuch/';
 
         // Konfiguration für optionale Benachrichtigungen bei neuen Fehlermeldungen.
         const bugReportNotificationConfig = {
@@ -1793,8 +1805,39 @@ await emailjs.send(
             getElement('login-form').addEventListener('submit', (e) => { e.preventDefault(); signInWithEmailAndPassword(auth, getElement('login-email').value, getElement('login-password').value).catch(err => getElement('auth-message').textContent = "Anmeldung fehlgeschlagen."); });
             getElement('register-form').addEventListener('submit', (e) => { e.preventDefault(); createUserWithEmailAndPassword(auth, getElement('register-email').value, getElement('register-password').value).catch(err => getElement('auth-message').textContent = "Registrierung fehlgeschlagen."); });
             getElement('logout-btn').addEventListener('click', () => signOut(auth));
-            getElement('toggle-auth-mode').addEventListener('click', () => { 
-                getElement('login-form').classList.toggle('hidden'); 
+
+            const shareButton = getElement('share-app-btn');
+            if (shareButton) {
+                shareButton.addEventListener('click', async () => {
+                    const shareData = {
+                        title: 'A&I-Logbuch',
+                        text: 'Teile das digitale Logbuch für die Facharztweiterbildung Anästhesiologie.',
+                        url: APP_SHARE_URL
+                    };
+
+                    if (navigator.share) {
+                        try {
+                            await navigator.share(shareData);
+                        } catch (err) {
+                            if (err && err.name !== 'AbortError') {
+                                console.error('Share failed:', err);
+                                showCustomMessage('Hinweis', 'Das Teilen wurde abgebrochen oder ist fehlgeschlagen. Bitte versuchen Sie es erneut.');
+                            }
+                        }
+                    } else {
+                        try {
+                            await navigator.clipboard.writeText(shareData.url);
+                            showCustomMessage('Link kopiert', 'Der Link zur App wurde in die Zwischenablage kopiert. Fügen Sie ihn z. B. in WhatsApp, E-Mail oder AirDrop ein.');
+                        } catch (clipboardError) {
+                            console.error('Clipboard copy failed:', clipboardError);
+                            showCustomMessage('Hinweis', `Teilen wird von diesem Gerät nicht unterstützt. Bitte kopieren Sie den Link manuell: ${shareData.url}`);
+                        }
+                    }
+                });
+            }
+
+            getElement('toggle-auth-mode').addEventListener('click', () => {
+                getElement('login-form').classList.toggle('hidden');
                 getElement('register-form').classList.toggle('hidden');
                 getElement('auth-message').textContent = '';
                 getElement('toggle-auth-mode').textContent = getElement('login-form').classList.contains('hidden') ? 'Bereits einen Account? Hier anmelden.' : 'Noch kein Account? Hier registrieren.';
